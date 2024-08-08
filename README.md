@@ -2,9 +2,10 @@
 This is the monorepo for Etched's AI chat platform. Connect it to any open-source model (or any endpoint that streams responses like OpenAI or Anthropic's API) and start chatting!
 
 Features:
-- Google OAuth
+- Google OAuth (Planned)
 - Custom system prompts
-- Artifact plugins (In progress)
+- Artifact plugins (Planned)
+- Org-wide and personal RAG (Planned)
 
 ## Repo Structure
 This is a [turborepo](https://turbo.build/repo/docs) managed monorepo. Read up on it if you have never heard of it before.
