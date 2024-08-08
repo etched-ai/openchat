@@ -1,7 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     darkMode: ['class'],
-    content: ['./src/**/*.{ts,tsx}'],
+    content: [
+        './pages/**/*.{ts,tsx}',
+        './components/**/*.{ts,tsx}',
+        './app/**/*.{ts,tsx}',
+        './src/**/*.{ts,tsx}',
+    ],
     prefix: '',
     theme: {
         container: {
@@ -13,42 +18,38 @@ module.exports = {
         },
         extend: {
             colors: {
-                border: 'rgb(var(--border) / <alpha-value>)',
-                input: 'rgb(var(--input) / <alpha-value>)',
-                ring: 'rgb(var(--ring) / <alpha-value>)',
-                background: 'rgb(var(--background) / <alpha-value>)',
-                foreground: 'rgb(var(--foreground) / <alpha-value>)',
+                border: 'hsl(var(--border))',
+                input: 'hsl(var(--input))',
+                ring: 'hsl(var(--ring))',
+                background: 'hsl(var(--background))',
+                foreground: 'hsl(var(--foreground))',
                 primary: {
-                    DEFAULT: 'rgb(var(--primary) / <alpha-value>)',
-                    foreground:
-                        'rgb(var(--primary-foreground) / <alpha-value>)',
+                    DEFAULT: 'hsl(var(--primary))',
+                    foreground: 'hsl(var(--primary-foreground))',
                 },
                 secondary: {
-                    DEFAULT: 'rgb(var(--secondary) / <alpha-value>)',
-                    foreground:
-                        'rgb(var(--secondary-foreground) / <alpha-value>)',
+                    DEFAULT: 'hsl(var(--secondary))',
+                    foreground: 'hsl(var(--secondary-foreground))',
                 },
                 destructive: {
-                    DEFAULT: 'rgb(var(--destructive) / <alpha-value>)',
-                    foreground:
-                        'rgb(var(--destructive-foreground) / <alpha-value>)',
+                    DEFAULT: 'hsl(var(--destructive))',
+                    foreground: 'hsl(var(--destructive-foreground))',
                 },
                 muted: {
-                    DEFAULT: 'rgb(var(--muted) / <alpha-value>)',
-                    foreground: 'rgb(var(--muted-foreground) / <alpha-value>)',
+                    DEFAULT: 'hsl(var(--muted))',
+                    foreground: 'hsl(var(--muted-foreground))',
                 },
                 accent: {
-                    DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
-                    foreground: 'rgb(var(--accent-foreground) / <alpha-value>)',
+                    DEFAULT: 'hsl(var(--accent))',
+                    foreground: 'hsl(var(--accent-foreground))',
                 },
                 popover: {
-                    DEFAULT: 'rgb(var(--popover) / <alpha-value>)',
-                    foreground:
-                        'rgb(var(--popover-foreground) / <alpha-value>)',
+                    DEFAULT: 'hsl(var(--popover))',
+                    foreground: 'hsl(var(--popover-foreground))',
                 },
                 card: {
-                    DEFAULT: 'rgb(var(--card) / <alpha-value>)',
-                    foreground: 'rgb(var(--card-foreground) / <alpha-value>)',
+                    DEFAULT: 'hsl(var(--card))',
+                    foreground: 'hsl(var(--card-foreground))',
                 },
             },
             borderRadius: {
