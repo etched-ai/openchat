@@ -1,0 +1,25 @@
+{
+    "name": "@repo/server",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "node dist/src/index.js",
+        "dev": "nodemon",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@trpc/server": "11.0.0-rc.477"
+    },
+    "devDependencies": {
+        "@repo/tsconfig": "workspace:*",
+        "@swc/cli": "^0.4.0",
+        "@swc/core": "^1.7.6",
+        "nodemon": "^3.1.4",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.5.4"
+    }
+}

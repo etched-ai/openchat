@@ -1,0 +1,27 @@
+{
+    "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+    "organizeImports": {
+        "enabled": true,
+        "ignore": ["apps/ui/src/routeTree.gen.ts", "apps/ui/tsconfig*.json"]
+    },
+    "formatter": {
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "ignore": ["apps/ui/src/routeTree.gen.ts", "apps/ui/tsconfig*.json"]
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single"
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "style": {
+                "noUselessElse": "off"
+            }
+        },
+        "ignore": ["apps/ui/src/routeTree.gen.ts", "apps/ui/tsconfig*.json"]
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "name": "chat",
+    "version": "0.0.1",
+    "description": "Etched AI Chat UI",
+    "scripts": {
+        "build": "turbo build",
+        "dev": "turbo dev",
+        "lint": "turbo lint",
+        "format": "biome format --write .",
+        "prepare": "husky"
+    },
+    "keywords": [],
+    "author": "Etched",
+    "license": "ISC",
+    "devDependencies": {
+        "@biomejs/biome": "^1.8.3",
+        "husky": "^9.1.4",
+        "lint-staged": "^15.2.8",
+        "turbo": "^2.0.12",
+        "typescript": "^5.5.4"
+    },
+    "packageManager": "pnpm@8.15.6",
+    "engines": {
+        "node": ">=18"
+    },
+    "lint-staged": {
+        "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+            "biome check --write --no-errors-on-unmatched"
+        ]
+    }
+}
