@@ -14,7 +14,9 @@
     "dependencies": {
         "@repo/db": "workspace:*",
         "@trpc/server": "11.0.0-rc.477",
+        "dotenv": "^16.4.5",
         "fastify": "^4.28.1",
+        "fastify-plugin": "^4.5.1",
         "luxon": "^3.5.0",
         "openai": "^4.55.3",
         "zod": "^3.23.8"

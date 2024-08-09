@@ -15,7 +15,7 @@ export const MAX_CONTEXT_LENGTH = 128000;
 export default class AIService implements IAIService {
     private _openaiClient: OpenAI;
 
-    constructor() {
+    private constructor() {
         const baseURL = process.env.OPENAI_BASE_URL;
         const apiKey = process.env.OPENAI_KEY ?? 'EMPTY';
 
@@ -26,6 +26,15 @@ export default class AIService implements IAIService {
             baseURL,
             apiKey,
         });
+    }
+
+    private static instance: AIService; // Singleton
+
+    static getInstance(): AIService {
+        if (!AIService.instance) {
+            AIService.instance = new AIService();
+        }
+        return AIService.instance;
     }
 
     getOpenAIClient(): OpenAI {

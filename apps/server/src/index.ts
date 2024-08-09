@@ -1,20 +1,21 @@
+import 'dotenv/config';
+
 import {
     type FastifyTRPCPluginOptions,
     fastifyTRPCPlugin,
 } from '@trpc/server/adapters/fastify';
 import fastify from 'fastify';
-import { createContext } from './context';
-import { router } from './trpc';
+import AIServiceSingletonPlugin from './plugins/AIServiceSingletonPlugin';
+import { createContext } from './trpc/context';
+import { type AppRouter, appRouter } from './trpc/router';
 
 const SERVER_PORT = 8000;
-
-const appRouter = router({});
-
-export type AppRouter = typeof appRouter;
 
 const server = fastify({
     maxParamLength: 5000,
 });
+
+server.register(AIServiceSingletonPlugin);
 
 server.register(fastifyTRPCPlugin, {
     prefix: '/trpc',
