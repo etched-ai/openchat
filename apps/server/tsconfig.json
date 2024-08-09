@@ -2,6 +2,7 @@
     "$schema": "https://json.schemastore.org/tsconfig",
     "extends": ["@repo/tsconfig/base.json"],
     "compilerOptions": {
+        "jsx": "preserve",
         "outDir": "./dist",
         "rootDir": "./src"
     },
