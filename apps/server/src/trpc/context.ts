@@ -3,7 +3,7 @@ import AIService from '../AIService/AIService';
 
 export function createContext({ req, res }: CreateFastifyContextOptions) {
     const user = {
-        token: req.headers.authorization ?? 'anon',
+        id: req.headers.authorization ?? 'anon',
     };
 
     return { req, res, user, aiService: AIService.getInstance() };

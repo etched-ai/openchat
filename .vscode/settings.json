@@ -1,5 +1,9 @@
 {
-    "recommendations": ["biomejs.biome", "bradlc.vscode-tailwindcss"],
+    "recommendations": [
+        "biomejs.biome",
+        "bradlc.vscode-tailwindcss",
+        "yoavbls.pretty-ts-errors"
+    ],
     "editor.formatOnSave": true,
     "files.encoding": "utf8",
     "files.insertFinalNewline": true,

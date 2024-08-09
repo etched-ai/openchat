@@ -1,5 +1,5 @@
+import AIService from '@/AIService/AIService';
 import fp from 'fastify-plugin';
-import AIService from '../AIService/AIService';
 
 declare module 'fastify' {
     interface FastifyInstance {

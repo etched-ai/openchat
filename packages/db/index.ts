@@ -9,7 +9,7 @@ export const DBChatSchema = z.object({
 });
 export type DBChat = z.infer<typeof DBChatSchema>;
 
-export const DBChatMessage = z.object({
+export const DBChatMessageSchema = z.object({
     id: z.string().ulid(),
     userID: z.string().ulid(),
     chatID: z.string().ulid(),
@@ -18,4 +18,4 @@ export const DBChatMessage = z.object({
     createdAt: z.date(),
     updatedAt: z.date(),
 });
-export type DBChatMessage = z.infer<typeof DBChatMessage>;
+export type DBChatMessage = z.infer<typeof DBChatMessageSchema>;
