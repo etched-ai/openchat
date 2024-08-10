@@ -7,13 +7,15 @@
         "dev": "turbo dev",
         "lint": "turbo lint",
         "format": "biome format --write .",
-        "prepare": "husky"
+        "prepare": "node -e \"if(require('fs').existsSync('.env') && require('dotenv').config().parsed.SKIP_HUSKY !== 'true') require('husky').install()\"",
+        "lint-staged": "lint-staged"
     },
     "keywords": [],
     "author": "Etched",
     "license": "ISC",
     "devDependencies": {
         "@biomejs/biome": "^1.8.3",
+        "dotenv": "^16.4.5",
         "husky": "^9.1.4",
         "lint-staged": "^15.2.8",
         "turbo": "^2.0.12",
