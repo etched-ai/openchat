@@ -1,6 +1,12 @@
 name: Biome Check
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   biome-check:
@@ -16,9 +22,10 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-
-      - name: Install dependencies
-        run: pnpm ci
+        with:
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-depedencies]
 
       - name: Run Biome check
         run: pnpm exec biome check .
