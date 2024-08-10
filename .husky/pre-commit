@@ -1,7 +1,7 @@
 set -e
 
-if [ -f "../.env" ]; then
-    source ../.env
+if [ -f ".env" ]; then
+    source .env
 fi
 
 if [ "$SKIP_LINT" = "true" ]; then
