@@ -22,10 +22,10 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          run_install: |
-            - recursive: false
-              args: [--frozen-lockfile, --strict-peer-depedencies]
+
+      - name: Install dependencies
+        uses: |
+          pnpm install
 
       - name: Run Biome check
         run: pnpm exec biome check .
