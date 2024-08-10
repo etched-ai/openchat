@@ -7,8 +7,7 @@
         "dev": "turbo dev",
         "lint": "turbo lint",
         "format": "biome format --write .",
-        "prepare": "node scripts/prepare-husky.mjs",
-        "lint-staged": "lint-staged"
+        "prepare": "husky"
     },
     "keywords": [],
     "author": "Etched",
