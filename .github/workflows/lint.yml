@@ -24,7 +24,7 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Install dependencies
-        uses: |
+        run: |
           pnpm install
 
       - name: Run Biome check
