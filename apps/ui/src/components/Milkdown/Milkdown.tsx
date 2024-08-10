@@ -29,6 +29,7 @@ export const MilkdownEditor: React.FC = () => {
             .use(commonmark)
             .use(gfm)
             .use(history)
+            .use(placeholder)
             .use([headerSyntaxPlugin, codeBlockSyntaxPlugin, inlineCodePlugin]),
     );
 

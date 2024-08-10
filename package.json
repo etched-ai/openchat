@@ -7,7 +7,7 @@
         "dev": "turbo dev",
         "lint": "turbo lint",
         "format": "biome format --write .",
-        "prepare": "node -e \"if(require('fs').existsSync('.env') && require('dotenv').config().parsed.SKIP_HUSKY !== 'true') require('husky').install()\"",
+        "prepare": "node scripts/prepare-huksy.js",
         "lint-staged": "lint-staged"
     },
     "keywords": [],
