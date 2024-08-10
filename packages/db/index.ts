@@ -19,5 +19,3 @@ export const DBChatMessageSchema = z.object({
     updatedAt: z.date(),
 });
 export type DBChatMessage = z.infer<typeof DBChatMessageSchema>;
-
-export const urmom = 'fat';
