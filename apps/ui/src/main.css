@@ -63,9 +63,15 @@
   * {
     @apply border-border;
   }
+  html {
+    @apply w-screen h-screen;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground w-full h-full;
     font-family: "Jetbrains Mono", system-ui, sans-serif;
+  }
+  #root {
+    @apply w-full h-full
   }
 }
 
@@ -74,8 +80,6 @@
 }
 
 .milkdown {
-  @apply pl-4 pr-4;
-
   h1 {
     @apply text-4xl font-bold mb-4 mt-6;
   }
@@ -90,6 +94,16 @@
 
   p {
     @apply mb-4;
+  }
+
+  div[data-placeholder] {
+    &:first-child:before {
+      content: attr(data-placeholder);
+      float: left;
+      color: #aaa;
+      pointer-events: none;
+      height: 0;
+    }
   }
 
   strong {
