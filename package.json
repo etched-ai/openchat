@@ -7,7 +7,7 @@
         "dev": "turbo dev",
         "lint": "turbo lint",
         "format": "biome format --write .",
-        "prepare": "node scripts/prepare-husky.js",
+        "prepare": "node scripts/prepare-husky.mjs",
         "lint-staged": "lint-staged"
     },
     "keywords": [],
