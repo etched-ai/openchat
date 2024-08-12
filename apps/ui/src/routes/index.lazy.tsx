@@ -28,7 +28,7 @@ function Index() {
         }
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = (text: string): void => {
         console.log('Submitting!');
     };
 
@@ -43,7 +43,7 @@ function Index() {
 }
 
 type InputBoxProps = {
-    handleSubmit: () => void;
+    handleSubmit: (text: string) => void;
 };
 const InputBox: React.FC<InputBoxProps> = ({ handleSubmit }) => {
     // This gets the instance of the Milkdown editor thats in the input box. We then
@@ -57,32 +57,33 @@ const InputBox: React.FC<InputBoxProps> = ({ handleSubmit }) => {
         [loading, getEditor],
     );
 
-    const [inputHasContent, setInputHasContent] = useState(false);
+    const [inputContent, setInputContent] = useState('');
 
-    const handleContentUpdated = useCallback(() => {
+    const _handleSubmit = useCallback((): void => {
+        handleSubmit(inputContent);
+    }, [handleSubmit, inputContent]);
+
+    const handleContentUpdated = () =>
         editorAction((ctx) => {
             const md = getMarkdown()(ctx);
-            setInputHasContent(md.length > 0);
+            setInputContent(md);
         });
-    }, [editorAction]);
 
-    const handleKeyUp = useCallback(
-        (e: KeyboardEvent) => {
-            if (
-                e.key === 'Enter' &&
-                !e.shiftKey &&
-                !e.ctrlKey &&
-                !e.altKey &&
-                !e.metaKey
-            ) {
-                e.preventDefault();
-                handleSubmit();
-            }
-            handleContentUpdated();
-        },
-        [handleContentUpdated, handleSubmit],
-    );
+    const handleKeyUp = (e: KeyboardEvent) => {
+        if (
+            e.key === 'Enter' &&
+            !e.shiftKey &&
+            !e.ctrlKey &&
+            !e.altKey &&
+            !e.metaKey
+        ) {
+            e.preventDefault();
+            _handleSubmit();
+        }
+        handleContentUpdated();
+    };
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: We don't need to nor should `useCallback` these
     useEffect(() => {
         handleContentUpdated();
 
@@ -96,9 +97,9 @@ const InputBox: React.FC<InputBoxProps> = ({ handleSubmit }) => {
                 view.dom.removeEventListener('keyup', handleKeyUp);
             };
         });
-    }, [editorAction, handleContentUpdated, handleKeyUp]);
+    }, [editorAction]);
 
-    const focusOnEditor = useCallback(() => {
+    const focusOnEditor = () =>
         editorAction((ctx) => {
             const view = ctx.get(editorViewCtx);
             const { state } = view;
@@ -110,11 +111,11 @@ const InputBox: React.FC<InputBoxProps> = ({ handleSubmit }) => {
                 view.focus();
             }
         });
-    }, [editorAction]);
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Don't need to wrap this in `useCallback`
     useEffect(() => {
         focusOnEditor();
-    }, [focusOnEditor]);
+    }, []);
 
     return (
         // biome-ignore lint/a11y/useKeyWithClickEvents: This is technically a text input
@@ -123,7 +124,10 @@ const InputBox: React.FC<InputBoxProps> = ({ handleSubmit }) => {
             onClick={() => focusOnEditor()}
         >
             <MilkdownEditor />
-            <SubmitButton onSubmit={handleSubmit} show={inputHasContent} />
+            <SubmitButton
+                onSubmit={_handleSubmit}
+                show={inputContent.length > 0}
+            />
         </div>
     );
 };
