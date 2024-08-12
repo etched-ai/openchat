@@ -46,6 +46,8 @@ type InputBoxProps = {
     handleSubmit: () => void;
 };
 const InputBox: React.FC<InputBoxProps> = ({ handleSubmit }) => {
+    // This gets the instance of the Milkdown editor thats in the input box. We then
+    // use this to intercept keyboard events and get the state of the editor.
     const [loading, getEditor] = useInstance();
     const editorAction = useCallback(
         (fn: (ctx: Ctx) => void) => {
@@ -133,6 +135,7 @@ type SubmitButtonProps = {
 const SubmitButton: React.FC<SubmitButtonProps> = ({ onSubmit, show }) => {
     return (
         <Button
+            // We only want to show the submit button if there is content in the box.
             className={`
                     transition-all duration-200 ease-in-out
                     ${show ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}
