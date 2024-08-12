@@ -7,6 +7,7 @@ import { MilkdownProvider, useInstance } from '@milkdown/react';
 import { getMarkdown } from '@milkdown/utils';
 import { createLazyFileRoute, useRouter } from '@tanstack/react-router';
 import { ArrowUp } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useCallback, useEffect, useState } from 'react';
 
 export const Route = createLazyFileRoute('/')({
@@ -16,13 +17,24 @@ export const Route = createLazyFileRoute('/')({
 function Index() {
     const router = useRouter();
 
+    const getGreeting = () => {
+        const hour = DateTime.local().hour;
+        if (hour < 12) {
+            return 'morning';
+        } else if (hour < 18) {
+            return 'afternoon';
+        } else {
+            return 'evening';
+        }
+    };
+
     const handleSubmit = () => {
         console.log('Submitting!');
     };
 
     return (
         <div className="w-full h-full justify-center items-center flex flex-col p-2">
-            <h1 className="text-4xl">Good afternoon, Colin :)</h1>
+            <h1 className="text-4xl">Good {getGreeting()}, Colin :)</h1>
             <MilkdownProvider>
                 <InputBox handleSubmit={handleSubmit} />
             </MilkdownProvider>
@@ -109,18 +121,23 @@ const InputBox: React.FC<InputBoxProps> = ({ handleSubmit }) => {
             onClick={() => focusOnEditor()}
         >
             <MilkdownEditor />
-            {inputHasContent && <SubmitButton onSubmit={handleSubmit} />}
+            <SubmitButton onSubmit={handleSubmit} show={inputHasContent} />
         </div>
     );
 };
 
 type SubmitButtonProps = {
     onSubmit: () => void;
+    show: boolean;
 };
-const SubmitButton: React.FC<SubmitButtonProps> = ({ onSubmit }) => {
+const SubmitButton: React.FC<SubmitButtonProps> = ({ onSubmit, show }) => {
     return (
         <Button
-            className="w-8 h-8 p-0 rounded-xl bg-primary text-primary-foreground flex items-center justify-center"
+            className={`
+                    transition-all duration-200 ease-in-out
+                    ${show ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}
+                    w-8 h-8 p-0 rounded-xl bg-primary text-primary-foreground flex items-center justify-center
+                `}
             onClick={onSubmit}
         >
             <ArrowUp className="w-4 h-4" />
