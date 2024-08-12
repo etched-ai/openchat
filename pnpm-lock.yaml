@@ -132,6 +132,9 @@ importers:
       '@trpc/client':
         specifier: 11.0.0-rc.477
         version: 11.0.0-rc.477(@trpc/server@11.0.0-rc.477)
+      '@trpc/server':
+        specifier: 11.0.0-rc.477
+        version: 11.0.0-rc.477
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0

@@ -6,7 +6,12 @@ import type { Ctx } from '@milkdown/ctx';
 import { TextSelection } from '@milkdown/prose/state';
 import { MilkdownProvider, useInstance } from '@milkdown/react';
 import { getMarkdown } from '@milkdown/utils';
-import { createLazyFileRoute, useRouter } from '@tanstack/react-router';
+import {
+    createFileRoute,
+    createLazyFileRoute,
+    useRouteContext,
+    useRouter,
+} from '@tanstack/react-router';
 import { ArrowUp } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useState } from 'react';
@@ -17,6 +22,7 @@ export const Route = createLazyFileRoute('/')({
 
 function Index() {
     const router = useRouter();
+    const createChatCtx = useRouteContext({ from: '/' });
 
     const getGreeting = () => {
         const hour = DateTime.local().hour;
@@ -30,12 +36,15 @@ function Index() {
     };
 
     const handleSubmit = async (text: string): Promise<void> => {
-        const chatResponseIterable = await trpc.chat.sendMessage.mutate({
-            message: text,
+        const createChatResp = await trpc.chat.createChat.mutate();
+        createChatCtx.initialChatMessage = text;
+        router.navigate({
+            from: '/',
+            to: '/c/$chatID',
+            params: {
+                chatID: createChatResp.id,
+            },
         });
-        for await (const chunk of chatResponseIterable) {
-            console.log(chunk);
-        }
     };
 
     return (
