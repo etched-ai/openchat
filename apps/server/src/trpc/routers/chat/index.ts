@@ -1,4 +1,4 @@
-import { router } from '@/trpc/trpc';
+import { router } from '../../trpc';
 import { sendMessage } from './sendMessage';
 
 export const chatRouter = router({

@@ -10,9 +10,9 @@ const API_BASE_URL =
 
 export const trpc = createTRPCClient<AppRouter>({
     links: [
-        httpBatchLink({
-            url: `${API_BASE_URL}/trpc`,
-        }),
+        // httpBatchLink({
+        //     url: `${API_BASE_URL}/trpc`,
+        // }),
         unstable_httpBatchStreamLink({
             url: `${API_BASE_URL}/trpc`,
         }),

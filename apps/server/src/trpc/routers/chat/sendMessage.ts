@@ -1,4 +1,3 @@
-import { publicProcedure } from '@/trpc/trpc';
 import {
     type DBChat,
     type DBChatMessage,
@@ -8,6 +7,7 @@ import {
 import { DateTime } from 'luxon';
 import { ulid } from 'ulid';
 import { z } from 'zod';
+import { publicProcedure } from '../../trpc';
 
 export const SendMessageSchema = z.object({
     message: z.string(),

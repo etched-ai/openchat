@@ -1,5 +1,6 @@
 import { MilkdownEditor } from '@/components/Milkdown/Milkdown';
 import { Button } from '@/components/ui/button';
+import { trpc } from '@/lib/trpc';
 import { editorViewCtx } from '@milkdown/core';
 import type { Ctx } from '@milkdown/ctx';
 import { TextSelection } from '@milkdown/prose/state';
@@ -28,8 +29,13 @@ function Index() {
         }
     };
 
-    const handleSubmit = (text: string): void => {
-        console.log('Submitting!');
+    const handleSubmit = async (text: string): Promise<void> => {
+        const chatResponseIterable = await trpc.chat.sendMessage.mutate({
+            message: text,
+        });
+        for await (const chunk of chatResponseIterable) {
+            console.log(chunk);
+        }
     };
 
     return (
@@ -60,8 +66,12 @@ const InputBox: React.FC<InputBoxProps> = ({ handleSubmit }) => {
     const [inputContent, setInputContent] = useState('');
 
     const _handleSubmit = useCallback((): void => {
-        handleSubmit(inputContent);
-    }, [handleSubmit, inputContent]);
+        editorAction((ctx) => {
+            const md = getMarkdown()(ctx);
+            console.log(md);
+            handleSubmit(md);
+        });
+    }, [handleSubmit, editorAction]);
 
     const handleContentUpdated = () =>
         editorAction((ctx) => {

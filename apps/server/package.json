@@ -12,6 +12,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@fastify/cors": "^9.0.1",
         "@repo/db": "workspace:*",
         "@trpc/server": "11.0.0-rc.477",
         "dotenv": "^16.4.5",
