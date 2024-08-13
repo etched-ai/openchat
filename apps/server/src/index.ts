@@ -1,5 +1,6 @@
 import 'dotenv/config';
 
+import fastifyCors from '@fastify/cors';
 import {
     type FastifyTRPCPluginOptions,
     fastifyTRPCPlugin,
@@ -13,6 +14,13 @@ const SERVER_PORT = 8000;
 
 const server = fastify({
     maxParamLength: 5000,
+});
+
+server.register(fastifyCors, {
+    origin: ['http://localhost:5173'],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['*'],
+    credentials: true,
 });
 
 server.register(AIServiceSingletonPlugin);
@@ -34,7 +42,7 @@ server.register(fastifyTRPCPlugin, {
 (async () => {
     try {
         console.info('[INFO]: Starting server...');
-        await server.listen({ port: SERVER_PORT });
+        await server.listen({ port: SERVER_PORT, host: '0.0.0.0' });
         console.info(`[INFO]: Listening on port ${SERVER_PORT}`);
     } catch (err) {
         server.log.error(err);

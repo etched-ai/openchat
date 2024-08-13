@@ -16,7 +16,7 @@
     --secondary-foreground: 240 240 240;
     --muted: 238 232 213;
     --muted-foreground: 127 141 141;
-    --accent: 230 224 211;
+    --accent: 230 229 221;
     --accent-foreground: 7 54 66;
     --destructive: 220 50 47;
     --destructive-foreground: 240 240 240;
@@ -153,11 +153,11 @@
   }
 
   code {
-    @apply bg-muted rounded px-1 py-0.5 font-mono text-sm;
+    @apply bg-accent rounded px-1 py-0.5 font-mono text-sm;
   }
 
   pre {
-    @apply bg-muted rounded p-4 mb-4 overflow-x-auto;
+    @apply bg-accent rounded p-4 mb-4 overflow-x-auto;
 
     code {
       @apply bg-transparent p-0;
