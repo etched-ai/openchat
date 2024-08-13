@@ -12,6 +12,10 @@ export const SendMessageSchema = z.object({
 });
 type SendMessageOutput =
     | {
+          type: 'userMessage';
+          message: DBChatMessage;
+      }
+    | {
           type: 'messageChunk';
           messageChunk: DBChatMessage;
       }
@@ -26,6 +30,19 @@ export const sendMessage = publicProcedure
         input,
         ctx,
     }): AsyncGenerator<SendMessageOutput> {
+        yield {
+            type: 'userMessage',
+            message: {
+                id: ulid(),
+                userID: ctx.user.id,
+                chatID: input.chatID,
+                messageType: 'user',
+                messageContent: input.message,
+                createdAt: DateTime.now().toJSDate(),
+                updatedAt: DateTime.now().toJSDate(),
+            },
+        };
+
         const openaiClient = ctx.aiService.getOpenAIClient();
         const chatMessages = ctx.aiService.getChatPromptMessages({
             newMessage: input.message,
