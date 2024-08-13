@@ -13,7 +13,9 @@ import { DateTime } from 'luxon';
 import {
     useCallback,
     useEffect,
+    useLayoutEffect,
     useOptimistic,
+    useRef,
     useState,
     useTransition,
 } from 'react';
@@ -78,6 +80,31 @@ function Chat() {
     const [currentlyStreamingMessage, setCurrentlyStreamingMessage] = useState<
         string | null
     >(null);
+
+    const chatContainerRef = useRef<HTMLDivElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const checkContentFillsScreen = () => {
+        if (chatContainerRef.current && messagesEndRef.current) {
+            const containerHeight = chatContainerRef.current.clientHeight;
+            const contentHeight =
+                messagesEndRef.current.offsetTop +
+                messagesEndRef.current.clientHeight;
+            return contentHeight >= containerHeight;
+        }
+        return false;
+    };
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Don't need to wrap in useCallback
+    useLayoutEffect(() => {
+        if (chatContainerRef.current) {
+            if (checkContentFillsScreen()) {
+                chatContainerRef.current.style.justifyContent = 'flex-end';
+            } else {
+                chatContainerRef.current.style.justifyContent = 'flex-start';
+            }
+        }
+    }, [optimisticMessages, currentlyStreamingMessage]);
 
     const handleMessageGenerator = useCallback(
         async (sendMessageGenerator: TRPCOutputs['chat']['sendMessage']) => {
@@ -169,9 +196,12 @@ function Chat() {
     };
 
     return (
-        <div className="w-full h-full flex flex-col items-center">
-            <div className="w-full flex-1 flex flex-col items-center justify-start">
-                <div className="w-full flex overflow-y-scroll flex-col items-center justify-end">
+        <div className="w-full h-full flex flex-col">
+            <div
+                ref={chatContainerRef}
+                className="w-full flex-1 flex flex-col items-center overflow-y-auto"
+            >
+                <div className="w-full max-w-4xl flex-grow flex flex-col items-center">
                     <div className="h-2" />
                     {optimisticMessages.map((m) => (
                         <Message key={m.id} message={m} />
@@ -179,10 +209,10 @@ function Chat() {
                     {currentlyStreamingMessage && (
                         <AssistantMessage message={currentlyStreamingMessage} />
                     )}
-                    <div className="h-20" />
+                    <div ref={messagesEndRef} className="h-20" />
                 </div>
             </div>
-            <div className="fixed bottom-0 w-[44vw] min-h-20 max-h-[40rem] rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-hidden pb-2">
+            <div className="fixed bottom-0 self-center w-full max-w-4xl rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-hidden pb-2">
                 <InputBox
                     handleSubmit={handleSubmit}
                     placeholderText="Reply to Charlie..."
