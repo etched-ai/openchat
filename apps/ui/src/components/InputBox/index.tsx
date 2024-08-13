@@ -1,4 +1,4 @@
-import { editorViewCtx } from '@milkdown/core';
+import { editorView, editorViewCtx } from '@milkdown/core';
 import type { Ctx } from '@milkdown/ctx';
 import { TextSelection } from '@milkdown/prose/state';
 import { MilkdownProvider, useInstance } from '@milkdown/react';
@@ -26,8 +26,6 @@ const InputBoxInner: React.FC<InputBoxProps> = ({
     handleSubmit,
     placeholderText,
 }) => {
-    // This gets the instance of the Milkdown editor thats in the input box. We then
-    // use this to intercept keyboard events and get the state of the editor.
     const [loading, getEditor] = useInstance();
     const editorAction = useCallback(
         (fn: (ctx: Ctx) => void) => {
@@ -36,50 +34,71 @@ const InputBoxInner: React.FC<InputBoxProps> = ({
         },
         [loading, getEditor],
     );
-
     const [inputContent, setInputContent] = useState('');
 
     const _handleSubmit = useCallback((): void => {
         editorAction((ctx) => {
             const md = getMarkdown()(ctx);
             handleSubmit(md);
+
+            const view = ctx.get(editorViewCtx);
+            const { tr } = view.state;
+            tr.delete(0, view.state.doc.content.size);
+            view.dispatch(tr);
+
+            setInputContent('');
         });
     }, [handleSubmit, editorAction]);
 
     useEffect(() => {
-        const handleContentUpdated = () =>
+        let cleanup: (() => void) | undefined;
+
+        const setupEditor = () => {
+            const handleContentUpdated = () =>
+                editorAction((ctx) => {
+                    const md = getMarkdown()(ctx);
+                    setInputContent(md);
+                });
+
+            const handleKeyUp = (e: KeyboardEvent) => {
+                handleContentUpdated();
+            };
+            const handleKeyDown = (e: KeyboardEvent) => {
+                if (
+                    e.key === 'Enter' &&
+                    !e.shiftKey &&
+                    !e.ctrlKey &&
+                    !e.altKey &&
+                    !e.metaKey
+                ) {
+                    e.preventDefault();
+                    _handleSubmit();
+                }
+            };
+
             editorAction((ctx) => {
-                const md = getMarkdown()(ctx);
-                setInputContent(md);
+                const view = ctx.get(editorViewCtx);
+                view.dom.addEventListener('keydown', handleKeyDown);
+                view.dom.addEventListener('keyup', handleKeyUp);
+                cleanup = () => {
+                    view.dom.removeEventListener('keydown', handleKeyDown);
+                    view.dom.removeEventListener('keyup', handleKeyUp);
+                };
             });
 
-        const handleKeyUp = (e: KeyboardEvent) => {
-            if (
-                e.key === 'Enter' &&
-                !e.shiftKey &&
-                !e.ctrlKey &&
-                !e.altKey &&
-                !e.metaKey
-            ) {
-                e.preventDefault();
-                _handleSubmit();
-            }
             handleContentUpdated();
         };
 
-        handleContentUpdated();
+        if (!loading) {
+            setupEditor();
+        }
 
-        editorAction((ctx) => {
-            // I know there is a milkdown listener plugin. However, it's really slow.
-            // It's much faster to just listen to the key events themselves and press.
-            const view = ctx.get(editorViewCtx);
-            view.dom.addEventListener('keyup', handleKeyUp);
-
-            return () => {
-                view.dom.removeEventListener('keyup', handleKeyUp);
-            };
-        });
-    }, [editorAction, _handleSubmit]);
+        return () => {
+            if (cleanup) {
+                cleanup();
+            }
+        };
+    }, [loading, editorAction, _handleSubmit]);
 
     const focusOnEditor = useCallback(() => {
         editorAction((ctx) => {

@@ -9,7 +9,13 @@ import {
     useRouteContext,
 } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
-import { useEffect, useOptimistic, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useOptimistic,
+    useState,
+    useTransition,
+} from 'react';
 import { ulid } from 'ulid';
 
 type Loader = {
@@ -53,6 +59,7 @@ function Chat() {
         from: '/c/$chatID',
     });
 
+    const [messageIsPending, startTransition] = useTransition();
     const [messages, setMessages] = useState<DBChatMessage[]>([]);
     const [optimisticMessages, addOptimisticMessage] = useOptimistic(
         messages,
@@ -71,6 +78,51 @@ function Chat() {
         string | null
     >(null);
 
+    const handleMessageGenerator = useCallback(
+        async (sendMessageGenerator: TRPCOutputs['chat']['sendMessage']) => {
+            for await (const chunk of sendMessageGenerator) {
+                if (chunk.type === 'userMessage') {
+                    setMessages((ms) => [
+                        ...ms,
+                        {
+                            ...chunk.message,
+                            createdAt: DateTime.fromISO(
+                                chunk.message.createdAt,
+                            ).toJSDate(),
+                            updatedAt: DateTime.fromISO(
+                                chunk.message.updatedAt,
+                            ).toJSDate(),
+                        },
+                    ]);
+                } else if (chunk.type === 'messageChunk') {
+                    setCurrentlyStreamingMessage((m) => {
+                        const chunkContent = chunk.messageChunk.messageContent;
+                        if (m === null) {
+                            return chunkContent;
+                        } else {
+                            return m + chunk.messageChunk.messageContent;
+                        }
+                    });
+                } else {
+                    setMessages((ms) => [
+                        ...ms,
+                        {
+                            ...chunk.message,
+                            createdAt: DateTime.fromISO(
+                                chunk.message.createdAt,
+                            ).toJSDate(),
+                            updatedAt: DateTime.fromISO(
+                                chunk.message.updatedAt,
+                            ).toJSDate(),
+                        },
+                    ]);
+                    setCurrentlyStreamingMessage(null);
+                }
+            }
+        },
+        [],
+    );
+
     // If it was passed a sendMessageGenerator then it means we have a message to immediately start
     // rendering
     useEffect(() => {
@@ -78,77 +130,69 @@ function Chat() {
             if (initialMessage && sendMessageGenerator) {
                 addOptimisticMessage(initialMessage);
                 try {
-                    for await (const chunk of sendMessageGenerator) {
-                        if (chunk.type === 'userMessage') {
-                            setMessages((ms) => [
-                                ...ms,
-                                {
-                                    ...chunk.message,
-                                    createdAt: DateTime.fromISO(
-                                        chunk.message.createdAt,
-                                    ).toJSDate(),
-                                    updatedAt: DateTime.fromISO(
-                                        chunk.message.updatedAt,
-                                    ).toJSDate(),
-                                },
-                            ]);
-                        } else if (chunk.type === 'messageChunk') {
-                            setCurrentlyStreamingMessage((m) => {
-                                const chunkContent =
-                                    chunk.messageChunk.messageContent;
-                                if (m === null) {
-                                    return chunkContent;
-                                } else {
-                                    return (
-                                        m + chunk.messageChunk.messageContent
-                                    );
-                                }
-                            });
-                        } else {
-                            setMessages((ms) => [
-                                ...ms,
-                                {
-                                    ...chunk.message,
-                                    createdAt: DateTime.fromISO(
-                                        chunk.message.createdAt,
-                                    ).toJSDate(),
-                                    updatedAt: DateTime.fromISO(
-                                        chunk.message.updatedAt,
-                                    ).toJSDate(),
-                                },
-                            ]);
-                            setCurrentlyStreamingMessage(null);
-                        }
-                    }
+                    await handleMessageGenerator(sendMessageGenerator);
                 } catch (e) {
                     console.error('[ERROR] Initial stream:', e);
                 }
             }
         };
         processMessages();
-    }, [sendMessageGenerator, initialMessage, addOptimisticMessage]);
+    }, [
+        sendMessageGenerator,
+        handleMessageGenerator,
+        initialMessage,
+        addOptimisticMessage,
+    ]);
+
+    const handleSubmit = (message: string) => {
+        const sendMessage = async () => {
+            const sendMessageGenerator = await trpc.chat.sendMessage.mutate({
+                message: message,
+                chatID: chatID,
+            });
+            await handleMessageGenerator(sendMessageGenerator);
+        };
+
+        startTransition(() => {
+            addOptimisticMessage({
+                id: ulid(),
+                userID: '',
+                chatID: chatID,
+                messageType: 'user',
+                messageContent: message,
+                createdAt: DateTime.now().toJSDate(),
+                updatedAt: DateTime.now().toJSDate(),
+            });
+            sendMessage();
+        });
+    };
 
     return (
         <div className="w-full h-full flex flex-col items-center">
-            <div className="w-full flex-1 overflow-y-scroll flex flex-col items-center">
-                <div className="h-2" />
-                {optimisticMessages.map((m) =>
-                    m.messageType === 'assistant' ? (
-                        <AssistantMessage
-                            key={m.id}
-                            message={m.messageContent}
-                        />
-                    ) : (
-                        <UserMessage key={m.id} message={m.messageContent} />
-                    ),
-                )}
-                {currentlyStreamingMessage && (
-                    <AssistantMessage message={currentlyStreamingMessage} />
-                )}
+            <div className="w-full flex-1 overflow-y-scroll flex flex-col items-center justify-start">
+                <div className="w-full flex overflow-y-scroll flex-col items-center justify-end">
+                    <div className="h-2" />
+                    {optimisticMessages.map((m) =>
+                        m.messageType === 'assistant' ? (
+                            <AssistantMessage
+                                key={m.id}
+                                message={m.messageContent}
+                            />
+                        ) : (
+                            <UserMessage
+                                key={m.id}
+                                message={m.messageContent}
+                            />
+                        ),
+                    )}
+                    {currentlyStreamingMessage && (
+                        <AssistantMessage message={currentlyStreamingMessage} />
+                    )}
+                </div>
             </div>
             <div className="w-[44vw] min-h-20 max-h-[40rem] rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-hidden pb-2">
                 <InputBox
-                    handleSubmit={(text: string) => {}}
+                    handleSubmit={handleSubmit}
                     placeholderText="Reply to Charlie..."
                 />
             </div>
