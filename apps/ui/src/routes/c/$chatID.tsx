@@ -169,7 +169,7 @@ function Chat() {
 
     return (
         <div className="w-full h-full flex flex-col items-center">
-            <div className="w-full flex-1 overflow-y-scroll flex flex-col items-center justify-start">
+            <div className="w-full flex-1 flex flex-col items-center justify-start">
                 <div className="w-full flex overflow-y-scroll flex-col items-center justify-end">
                     <div className="h-2" />
                     {optimisticMessages.map((m) =>
@@ -188,9 +188,10 @@ function Chat() {
                     {currentlyStreamingMessage && (
                         <AssistantMessage message={currentlyStreamingMessage} />
                     )}
+                    <div className="h-20" />
                 </div>
             </div>
-            <div className="w-[44vw] min-h-20 max-h-[40rem] rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-hidden pb-2">
+            <div className="fixed bottom-0 w-[44vw] min-h-20 max-h-[40rem] rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-hidden pb-2">
                 <InputBox
                     handleSubmit={handleSubmit}
                     placeholderText="Reply to Charlie..."
