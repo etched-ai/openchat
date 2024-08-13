@@ -1,4 +1,5 @@
 import InputBox from '@/components/InputBox';
+import Message, { AssistantMessage } from '@/components/ui/chat/message';
 import UserIcon from '@/components/ui/userIcon';
 import { type TRPCOutputs, trpc } from '@/lib/trpc';
 import { MilkdownProvider } from '@milkdown/react';
@@ -172,19 +173,9 @@ function Chat() {
             <div className="w-full flex-1 flex flex-col items-center justify-start">
                 <div className="w-full flex overflow-y-scroll flex-col items-center justify-end">
                     <div className="h-2" />
-                    {optimisticMessages.map((m) =>
-                        m.messageType === 'assistant' ? (
-                            <AssistantMessage
-                                key={m.id}
-                                message={m.messageContent}
-                            />
-                        ) : (
-                            <UserMessage
-                                key={m.id}
-                                message={m.messageContent}
-                            />
-                        ),
-                    )}
+                    {optimisticMessages.map((m) => (
+                        <Message key={m.id} message={m} />
+                    ))}
                     {currentlyStreamingMessage && (
                         <AssistantMessage message={currentlyStreamingMessage} />
                     )}
@@ -200,24 +191,3 @@ function Chat() {
         </div>
     );
 }
-
-type MessageProps = {
-    message: string;
-};
-const UserMessage: React.FC<MessageProps> = ({ message }) => {
-    return (
-        <div className="w-[40vw] p-2 rounded-lg mt-2 mb-2 flex flex-row bg-accent">
-            <div>
-                <UserIcon userId="temp" className="mr-4" />
-            </div>
-            <div className="flex-1 pt-2">{message}</div>
-        </div>
-    );
-};
-const AssistantMessage: React.FC<MessageProps> = ({ message }) => {
-    return (
-        <div className="w-[40vw] p-3 rounded-lg mt-2 mb-2 flex flex-row bg-muted/85">
-            <div className="flex-1">{message}</div>
-        </div>
-    );
-};

@@ -6,8 +6,8 @@ import { getMarkdown } from '@milkdown/utils';
 import { ArrowUp } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { MilkdownEditor } from '../Milkdown/Milkdown';
-import { Button } from '../ui/button';
+import { MilkdownEditor } from './Milkdown/Milkdown';
+import { Button } from './ui/button';
 
 type InputBoxProps = {
     handleSubmit: (text: string) => void;
