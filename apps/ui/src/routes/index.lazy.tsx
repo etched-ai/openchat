@@ -77,7 +77,6 @@ const InputBox: React.FC<InputBoxProps> = ({ handleSubmit }) => {
     const _handleSubmit = useCallback((): void => {
         editorAction((ctx) => {
             const md = getMarkdown()(ctx);
-            console.log(md);
             handleSubmit(md);
         });
     }, [handleSubmit, editorAction]);
