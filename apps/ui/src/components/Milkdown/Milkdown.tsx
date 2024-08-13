@@ -11,14 +11,17 @@ import codeBlockSyntaxPlugin from './milkdownPlugins/codeBlockSyntaxPlugin';
 import headerSyntaxPlugin from './milkdownPlugins/headerSyntaxPlugin';
 import inlineCodePlugin from './milkdownPlugins/inlineCodeSyntaxPlugin';
 
-export const MilkdownEditor: React.FC = () => {
+type Props = {
+    placeholderText: string;
+};
+export const MilkdownEditor: React.FC<Props> = ({ placeholderText }) => {
     const { get } = useEditor((root) =>
         Editor.make()
             .config(nord)
             .config((ctx) => {
                 ctx.set(rootCtx, root);
                 ctx.set(defaultValueCtx, '');
-                ctx.set(placeholderCtx, 'How can Charlie help you today?');
+                ctx.set(placeholderCtx, placeholderText);
             })
             .use(listener)
             .use(commonmark)

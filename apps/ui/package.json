@@ -32,8 +32,9 @@
         "lucide-react": "^0.426.0",
         "luxon": "^3.5.0",
         "milkdown-plugin-placeholder": "^0.2.1",
-        "react": "^18.3.1",
-        "react-dom": "^18.3.1"
+        "react": "19.0.0-rc-d48603a5-20240813",
+        "react-dom": "19.0.0-rc-d48603a5-20240813",
+        "ulid": "^2.3.0"
     },
     "devDependencies": {
         "@repo/db": "workspace:*",
@@ -42,8 +43,8 @@
         "@tanstack/router-plugin": "^1.47.0",
         "@types/luxon": "^3.4.2",
         "@types/node": "^22.1.0",
-        "@types/react": "^18.3.3",
-        "@types/react-dom": "^18.3.0",
+        "@types/react": "npm:types-react@rc",
+        "@types/react-dom": "npm:types-react-dom@rc",
         "@vitejs/plugin-react": "^4.3.1",
         "autoprefixer": "^10.4.20",
         "globals": "^15.9.0",
@@ -54,5 +55,9 @@
         "tailwindcss-animate": "^1.0.7",
         "typescript": "^5.5.3",
         "vite": "^5.4.0"
+    },
+    "overrides": {
+        "@types/react": "npm:types-react@rc",
+        "@types/react-dom": "npm:types-react-dom@rc"
     }
 }
