@@ -7,6 +7,7 @@ import {
 } from '@trpc/server/adapters/fastify';
 import fastify from 'fastify';
 import AIServiceSingletonPlugin from './plugins/AIServiceSingletonPlugin';
+import SlonikDBSingletonPlugin from './plugins/SlonikDBSingletonPlugin';
 import { createContext } from './trpc/context';
 import { type AppRouter, appRouter } from './trpc/router';
 
@@ -16,6 +17,7 @@ const server = fastify({
     maxParamLength: 5000,
 });
 
+// Cors config
 server.register(fastifyCors, {
     origin: ['http://localhost:5173'],
     methods: ['GET', 'POST', 'OPTIONS'],
@@ -23,8 +25,13 @@ server.register(fastifyCors, {
     credentials: true,
 });
 
+// Add AI Service as a singleton across fastify
 server.register(AIServiceSingletonPlugin);
 
+// Add a db connection pool as a singleton across fastify
+server.register(SlonikDBSingletonPlugin);
+
+// TRPC
 server.register(fastifyTRPCPlugin, {
     prefix: '/trpc',
     trpcOptions: {
