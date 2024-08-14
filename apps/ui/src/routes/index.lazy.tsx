@@ -1,21 +1,12 @@
 import InputBox from '@/components/InputBox';
-import { MilkdownEditor } from '@/components/Milkdown/Milkdown';
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
-import { editorViewCtx } from '@milkdown/core';
-import type { Ctx } from '@milkdown/ctx';
-import { TextSelection } from '@milkdown/prose/state';
-import { MilkdownProvider, useInstance } from '@milkdown/react';
-import { getMarkdown } from '@milkdown/utils';
 import {
-    createFileRoute,
     createLazyFileRoute,
     useRouteContext,
     useRouter,
 } from '@tanstack/react-router';
-import { ArrowUp } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useCallback, useEffect, useState } from 'react';
 
 export const Route = createLazyFileRoute('/')({
     component: Index,
@@ -23,7 +14,7 @@ export const Route = createLazyFileRoute('/')({
 
 function Index() {
     const router = useRouter();
-    const createChatCtx = useRouteContext({ from: '/' });
+    const context = useRouteContext({ from: '/' });
 
     const getGreeting = () => {
         const hour = DateTime.local().hour;
@@ -38,7 +29,7 @@ function Index() {
 
     const handleSubmit = async (text: string): Promise<void> => {
         const createChatResp = await trpc.chat.createChat.mutate();
-        createChatCtx.initialChatMessage = text;
+        context.initialChatMessage = text;
         router.navigate({
             from: '/',
             to: '/c/$chatID',
@@ -57,6 +48,9 @@ function Index() {
                     placeholderText="How can Charlie help you today?"
                 />
             </div>
+            {(!context.session || context.session.user.is_anonymous) && (
+                <Button className="w-72 mt-6">Log in with Google</Button>
+            )}
         </div>
     );
 }

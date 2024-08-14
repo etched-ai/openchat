@@ -17,15 +17,9 @@ import { Route as CChatIDImport } from './routes/c/$chatID'
 
 // Create Virtual Routes
 
-const AboutLazyImport = createFileRoute('/about')()
 const IndexLazyImport = createFileRoute('/')()
 
 // Create/Update Routes
-
-const AboutLazyRoute = AboutLazyImport.update({
-  path: '/about',
-  getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/about.lazy').then((d) => d.Route))
 
 const IndexLazyRoute = IndexLazyImport.update({
   path: '/',
@@ -48,13 +42,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexLazyImport
       parentRoute: typeof rootRoute
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutLazyImport
-      parentRoute: typeof rootRoute
-    }
     '/c/$chatID': {
       id: '/c/$chatID'
       path: '/c/$chatID'
@@ -67,11 +54,7 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({
-  IndexLazyRoute,
-  AboutLazyRoute,
-  CChatIDRoute,
-})
+export const routeTree = rootRoute.addChildren({ IndexLazyRoute, CChatIDRoute })
 
 /* prettier-ignore-end */
 
@@ -82,15 +65,11 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/about",
         "/c/$chatID"
       ]
     },
     "/": {
       "filePath": "index.lazy.tsx"
-    },
-    "/about": {
-      "filePath": "about.lazy.tsx"
     },
     "/c/$chatID": {
       "filePath": "c/$chatID.tsx"
