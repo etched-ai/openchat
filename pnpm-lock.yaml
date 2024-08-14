@@ -236,6 +236,8 @@ importers:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@22.1.0)
 
+  infra/supabase: {}
+
   packages/db:
     dependencies:
       zod:

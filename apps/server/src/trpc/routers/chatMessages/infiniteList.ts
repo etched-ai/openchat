@@ -1,6 +1,7 @@
 // Cursor paginated chat message querying: https://trpc.io/docs/client/react/useInfiniteQuery
 
 import { DBChatMessageSchema } from '@repo/db';
+import { TRPCError } from '@trpc/server';
 import { sql } from 'slonik';
 import { z } from 'zod';
 import { publicProcedure } from '../../trpc';
@@ -30,7 +31,11 @@ export const infiniteList = publicProcedure
         if (messages.length > limit) {
             const nextItem = messagesToReturn.pop();
             if (!nextItem) {
-                throw new Error('POP FAILED???');
+                console.error('POP FAILED???');
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'The impossible happened ¯\\_(ツ)_/¯',
+                });
             }
             nextCursor = nextItem.id;
         }

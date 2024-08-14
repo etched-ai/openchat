@@ -17,7 +17,7 @@ export const trpc = createTRPCClient<AppRouter>({
             url: `${API_BASE_URL}/trpc`,
             headers() {
                 return {
-                    Authorization: token,
+                    Authorization: `Bearer ${token}`,
                 };
             },
         }),
