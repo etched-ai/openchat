@@ -1,5 +1,6 @@
 import { type DBChatMessage, DBChatMessageSchema } from '@repo/db';
 import { DateTime } from 'luxon';
+import { type DatabasePool, sql } from 'slonik';
 import { ulid } from 'ulid';
 import { z } from 'zod';
 import { publicProcedure } from '../../trpc';
@@ -30,17 +31,19 @@ export const sendMessage = publicProcedure
         input,
         ctx,
     }): AsyncGenerator<SendMessageOutput> {
-        yield {
-            type: 'userMessage',
-            message: {
+        const newUserMessage = await createDBChatMessage(
+            {
                 id: ulid(),
                 userID: ctx.user.id,
                 chatID: input.chatID,
                 messageType: 'user',
                 messageContent: input.message,
-                createdAt: DateTime.now().toJSDate(),
-                updatedAt: DateTime.now().toJSDate(),
             },
+            ctx.dbPool,
+        );
+        yield {
+            type: 'userMessage',
+            message: newUserMessage,
         };
 
         const openaiClient = ctx.aiService.getOpenAIClient();
@@ -73,16 +76,43 @@ export const sendMessage = publicProcedure
             fullMessage += chunk.choices[0]?.delta.content || '';
         }
 
-        yield {
-            type: 'completeMessage',
-            message: {
+        const completedAssistantMessage = await createDBChatMessage(
+            {
                 id: messageID,
                 userID: ctx.user.id,
                 chatID: input.chatID,
                 messageType: 'assistant',
                 messageContent: fullMessage,
-                createdAt: DateTime.now().toJSDate(),
-                updatedAt: DateTime.now().toJSDate(),
-            } satisfies DBChatMessage,
+            },
+            ctx.dbPool,
+        );
+        yield {
+            type: 'completeMessage',
+            message: completedAssistantMessage,
         };
     });
+
+type StrippedDBChatMessage = Omit<DBChatMessage, 'createdAt' | 'updatedAt'>;
+async function createDBChatMessage(
+    message: StrippedDBChatMessage,
+    pool: DatabasePool,
+): Promise<DBChatMessage> {
+    return await pool.one(sql.type(DBChatMessageSchema)`
+        INSERT INTO "ChatMessage" (
+            id,
+            "userID",
+            "chatID",
+            "messageType",
+            "messageContent",
+            "createdAt",
+            "updatedAt"
+        ) VALUES (
+            ${message.id},
+            ${message.userID},
+            ${message.chatID},
+            ${message.messageType},
+            ${message.messageContent},
+        )
+        RETURNING *
+    `);
+}
