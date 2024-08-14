@@ -1,3 +1,6 @@
+// This procedure creates a user/assistant message pair and streams down the assistant message is it's
+// being generated.
+
 import { type DBChatMessage, DBChatMessageSchema } from '@repo/db';
 import { DateTime } from 'luxon';
 import { type DatabasePool, sql } from 'slonik';
@@ -31,6 +34,7 @@ export const sendMessage = publicProcedure
         input,
         ctx,
     }): AsyncGenerator<SendMessageOutput> {
+        // First create the user's message in the DB and send it back down.
         const newUserMessage = await createDBChatMessage(
             {
                 id: ulid(),
@@ -61,6 +65,10 @@ export const sendMessage = publicProcedure
         const messageID = ulid();
         let fullMessage = '';
         for await (const chunk of chatIterator) {
+            // While the message is in the process of generating, we do not do database updates to it.
+            // No point slowing it down. If the user cancels the request in the middle it'll still be
+            // there locally so they can edit it. If they refresh the page its fine for a half-complete
+            // generation to just disappear as if it never happened.
             yield {
                 type: 'messageChunk',
                 messageChunk: {
