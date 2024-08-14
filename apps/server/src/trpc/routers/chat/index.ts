@@ -1,8 +1,8 @@
 import { router } from '../../trpc';
-import { createChat } from './createChat';
-import { sendMessage } from './sendMessage';
+import { create } from './create';
+import { get } from './get';
 
 export const chatRouter = router({
-    sendMessage,
-    createChat,
+    get,
+    create,
 });

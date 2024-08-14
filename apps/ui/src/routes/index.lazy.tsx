@@ -28,7 +28,7 @@ function Index() {
     };
 
     const handleSubmit = async (text: string): Promise<void> => {
-        const createChatResp = await trpc.chat.createChat.mutate();
+        const createChatResp = await trpc.chat.create.mutate();
         context.initialChatMessage = text;
         router.navigate({
             from: '/',

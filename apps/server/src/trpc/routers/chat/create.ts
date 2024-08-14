@@ -6,7 +6,7 @@ import { sql } from 'slonik';
 import { ulid } from 'ulid';
 import { publicProcedure } from '../../trpc';
 
-export const createChat = publicProcedure.mutation(async ({ ctx }) => {
+export const create = publicProcedure.mutation(async ({ ctx }) => {
     const newChat = await ctx.dbPool.one(sql.type(DBChatSchema)`
         INSERT INTO "Chat" (
             id,

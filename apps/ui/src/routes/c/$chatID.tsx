@@ -17,7 +17,7 @@ import { ulid } from 'ulid';
 
 type Loader = {
     initialMessage: DBChatMessage | null;
-    sendMessageGenerator: TRPCOutputs['chat']['sendMessage'] | null;
+    sendMessageGenerator: TRPCOutputs['chatMessages']['send'] | null;
 };
 export const Route = createFileRoute('/c/$chatID')({
     async loader({ context, params }) {
@@ -43,7 +43,7 @@ export const Route = createFileRoute('/c/$chatID')({
                 updatedAt: DateTime.now().toJSDate(),
             };
             // Then send a request for an async generator to get the AI streaming response
-            ret.sendMessageGenerator = await trpc.chat.sendMessage.mutate({
+            ret.sendMessageGenerator = await trpc.chatMessages.send.mutate({
                 message: initialChatMessage,
                 chatID: params.chatID,
             });
@@ -116,7 +116,7 @@ function Chat() {
 
     // Save a callback that processes message chunks and adds them to the state
     const handleMessageGenerator = useCallback(
-        async (sendMessageGenerator: TRPCOutputs['chat']['sendMessage']) => {
+        async (sendMessageGenerator: TRPCOutputs['chatMessages']['send']) => {
             for await (const chunk of sendMessageGenerator) {
                 if (chunk.type === 'userMessage') {
                     setMessages((ms) => [
@@ -183,7 +183,7 @@ function Chat() {
 
     const handleSubmit = (message: string) => {
         const sendMessage = async () => {
-            const sendMessageGenerator = await trpc.chat.sendMessage.mutate({
+            const sendMessageGenerator = await trpc.chatMessages.send.mutate({
                 message: message,
                 chatID: chatID,
             });

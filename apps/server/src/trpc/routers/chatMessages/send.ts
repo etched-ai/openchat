@@ -28,7 +28,7 @@ type SendMessageOutput =
           message: DBChatMessage;
       };
 
-export const sendMessage = publicProcedure
+export const send = publicProcedure
     .input(SendMessageSchema)
     .mutation(async function* ({
         input,
