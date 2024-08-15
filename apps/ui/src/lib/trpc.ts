@@ -5,6 +5,7 @@ import type { inferRouterOutputs } from '@trpc/server';
 let token: string | undefined;
 
 export function setAuthToken(newToken: string | undefined) {
+    console.log('NEW TOKEN', newToken);
     token = newToken;
 }
 
@@ -17,7 +18,7 @@ export const trpc = createTRPCClient<AppRouter>({
             url: `${API_BASE_URL}/trpc`,
             headers() {
                 return {
-                    Authorization: `Bearer ${token}`,
+                    authorization: `Bearer ${token}`,
                 };
             },
         }),

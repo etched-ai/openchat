@@ -34,6 +34,7 @@ export const send = publicProcedure
         input,
         ctx,
     }): AsyncGenerator<SendMessageOutput> {
+        console.log('SENDING CHAT MESSAGE');
         // First create the user's message in the DB and send it back down.
         const newUserMessage = await createDBChatMessage(
             {
@@ -105,22 +106,29 @@ async function createDBChatMessage(
     message: StrippedDBChatMessage,
     pool: DatabasePool,
 ): Promise<DBChatMessage> {
-    return await pool.one(sql.type(DBChatMessageSchema)`
-        INSERT INTO "ChatMessage" (
-            id,
-            "userID",
-            "chatID",
-            "messageType",
-            "messageContent",
-            "createdAt",
-            "updatedAt"
-        ) VALUES (
-            ${message.id},
-            ${message.userID},
-            ${message.chatID},
-            ${message.messageType},
-            ${message.messageContent},
-        )
-        RETURNING *
-    `);
+    try {
+        return await pool.one(sql.type(DBChatMessageSchema)`
+            INSERT INTO "ChatMessage" (
+                id,
+                "userID",
+                "chatID",
+                "messageType",
+                "messageContent",
+                "createdAt",
+                "updatedAt"
+            ) VALUES (
+                ${message.id},
+                ${message.userID},
+                ${message.chatID},
+                ${message.messageType},
+                ${message.messageContent},
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP
+            )
+            RETURNING *;
+        `);
+    } catch (e) {
+        console.error(e);
+        throw e;
+    }
 }

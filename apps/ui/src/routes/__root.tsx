@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { setAuthToken } from '@/lib/trpc';
+import type { Session } from '@supabase/supabase-js';
 import {
     Outlet,
     createRootRouteWithContext,
@@ -9,10 +10,11 @@ import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 
 type RouterContext = {
     initialChatMessage: string | null;
+    session: Session | null;
 };
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-    async beforeLoad() {
+    async beforeLoad({ context }) {
         let {
             data: { session },
         } = await supabase.auth.getSession();
@@ -40,7 +42,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
             });
         }
 
-        return { session };
+        context.session = session;
     },
     component: () => (
         <>

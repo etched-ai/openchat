@@ -18,8 +18,10 @@ export const create = publicProcedure.mutation(async ({ ctx }) => {
             ${ulid()},
             ${ctx.user.id},
             ${''}, -- Empty string for previewName
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
         )
-        RETURNING *
+        RETURNING *;
     `);
     return newChat;
 });

@@ -4,6 +4,7 @@ import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
 
 export async function createContext({ req, res }: CreateFastifyContextOptions) {
     const user = requestContext.get('user');
+    console.log('NO USER');
     if (!user) {
         throw new TRPCError({
             code: 'UNAUTHORIZED',
