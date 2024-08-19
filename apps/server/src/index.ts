@@ -29,8 +29,6 @@ declare module '@fastify/request-context' {
 server.register(fastifyRequestContext);
 server.addHook('onRequest', async (req, reply) => {
     let authToken = req.headers.authorization;
-    console.log('URMOM', req.headers);
-    console.log('AUTH', authToken);
     // It should always be in the form of `Bearer ${token}`
     if (typeof authToken !== 'string' || !authToken.startsWith('Bearer ')) {
         // Could be CORS requests or something

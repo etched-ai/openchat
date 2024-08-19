@@ -1,18 +1,23 @@
 import type { AppRouter } from '@repo/server/src/trpc/router';
 import { createTRPCClient, unstable_httpBatchStreamLink } from '@trpc/client';
+import { createTRPCQueryUtils, createTRPCReact } from '@trpc/react-query';
 import type { inferRouterOutputs } from '@trpc/server';
+import { queryClient } from './reactQuery';
 
 let token: string | undefined;
 
 export function setAuthToken(newToken: string | undefined) {
-    console.log('NEW TOKEN', newToken);
     token = newToken;
 }
 
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
-export const trpc = createTRPCClient<AppRouter>({
+export type TRPCOutputs = inferRouterOutputs<AppRouter>;
+
+export const trpc = createTRPCReact<AppRouter>();
+
+export const trpcClient = trpc.createClient({
     links: [
         unstable_httpBatchStreamLink({
             url: `${API_BASE_URL}/trpc`,
@@ -25,4 +30,7 @@ export const trpc = createTRPCClient<AppRouter>({
     ],
 });
 
-export type TRPCOutputs = inferRouterOutputs<AppRouter>;
+export const trpcQueryUtils = createTRPCQueryUtils({
+    queryClient,
+    client: trpcClient,
+});

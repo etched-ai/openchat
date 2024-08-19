@@ -16,6 +16,8 @@ function Index() {
     const router = useRouter();
     const context = useRouteContext({ from: '/' });
 
+    const createChatMutation = trpc.chat.create.useMutation();
+
     const getGreeting = () => {
         const hour = DateTime.local().hour;
         if (hour < 12) {
@@ -28,7 +30,8 @@ function Index() {
     };
 
     const handleSubmit = async (text: string): Promise<void> => {
-        const createChatResp = await trpc.chat.create.mutate();
+        const createChatResp = await createChatMutation.mutateAsync();
+        console.log(createChatResp);
         context.initialChatMessage = text;
         router.navigate({
             from: '/',

@@ -1,6 +1,6 @@
 // Cursor paginated chat message querying: https://trpc.io/docs/client/react/useInfiniteQuery
 
-import { DBChatMessageSchema } from '@repo/db';
+import { type DBChatMessage, DBChatMessageSchema } from '@repo/db';
 import { TRPCError } from '@trpc/server';
 import { sql } from 'slonik';
 import { z } from 'zod';
@@ -17,7 +17,7 @@ export const infiniteList = publicProcedure
     .query(async ({ input, ctx }) => {
         const { chatID, limit, cursor } = input;
 
-        const messages = await ctx.dbPool.many(sql.type(DBChatMessageSchema)`
+        const messages = await ctx.dbPool.any(sql.type(DBChatMessageSchema)`
             SELECT *
             FROM "ChatMessage"
             WHERE "chatID" = ${chatID}
@@ -25,7 +25,9 @@ export const infiniteList = publicProcedure
             ORDER BY id DESC
             LIMIT ${limit + 1} -- Get an extra item as the cursor (start of next query)
         `);
-        const messagesToReturn = [...messages];
+        // Have to type annotate this otherwise the client doesn't infer the type for
+        // some reason
+        const messagesToReturn: DBChatMessage[] = [...messages];
 
         let nextCursor: string | undefined = undefined;
         if (messages.length > limit) {

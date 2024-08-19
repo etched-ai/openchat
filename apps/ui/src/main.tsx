@@ -5,8 +5,18 @@ import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen';
 
 import './main.css';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/reactQuery';
+import { trpc, trpcClient } from './lib/trpc';
 
-const router = createRouter({ routeTree });
+const router = createRouter({
+    routeTree,
+    defaultPreloadStaleTime: 0,
+    context: {
+        initialChatMessage: null,
+        session: null,
+    },
+});
 
 declare module '@tanstack/react-router' {
     interface Register {
@@ -20,7 +30,11 @@ if (!rootElement.innerHTML) {
     const root = ReactDOM.createRoot(rootElement);
     root.render(
         <StrictMode>
-            <RouterProvider router={router} />
+            <trpc.Provider client={trpcClient} queryClient={queryClient}>
+                <QueryClientProvider client={queryClient}>
+                    <RouterProvider router={router} />
+                </QueryClientProvider>
+            </trpc.Provider>
         </StrictMode>,
     );
 }

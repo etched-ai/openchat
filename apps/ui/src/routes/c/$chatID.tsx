@@ -1,8 +1,15 @@
 import InputBox from '@/components/InputBox';
 import Message, { AssistantMessage } from '@/components/ui/chat/message';
-import { type TRPCOutputs, trpc } from '@/lib/trpc';
+import { queryClient } from '@/lib/reactQuery';
+import { type TRPCOutputs, trpc, trpcClient, trpcQueryUtils } from '@/lib/trpc';
 import type { DBChatMessage } from '@repo/db';
-import { createFileRoute, useLoaderData } from '@tanstack/react-router';
+import { infiniteQueryOptions } from '@tanstack/react-query';
+import {
+    createFileRoute,
+    redirect,
+    useLoaderData,
+} from '@tanstack/react-router';
+import { getQueryKey } from '@trpc/react-query';
 import { DateTime } from 'luxon';
 import {
     useCallback,
@@ -17,17 +24,28 @@ import { ulid } from 'ulid';
 
 type Loader = {
     initialMessage: DBChatMessage | null;
-    sendMessageGenerator: TRPCOutputs['chatMessages']['send'] | null;
 };
 export const Route = createFileRoute('/c/$chatID')({
     async loader({ context, params }) {
+        // If they're not logged in redirect to root to be logged in as anonymouse user
+        if (!context.session) {
+            throw redirect({
+                to: '/',
+            });
+        }
         // Some page redirecting to the chat could give us an initial chat message that
         // should immediately start preocessing
         const initialChatMessage = context.initialChatMessage;
+        context.initialChatMessage = null;
+
+        // Put some data in the cache
+        await trpcQueryUtils.chatMessages.infiniteList.ensureData({
+            chatID: params.chatID,
+            limit: 10,
+        });
 
         const ret: Loader = {
             initialMessage: null,
-            sendMessageGenerator: null,
         };
 
         if (initialChatMessage != null) {
@@ -35,21 +53,13 @@ export const Route = createFileRoute('/c/$chatID')({
             // to be optimistically rendered
             ret.initialMessage = {
                 id: ulid(),
-                userID: '',
+                userID: context.session.user.id,
                 chatID: params.chatID,
                 messageType: 'user',
                 messageContent: initialChatMessage,
                 createdAt: DateTime.now().toJSDate(),
                 updatedAt: DateTime.now().toJSDate(),
             };
-            // Then send a request for an async generator to get the AI streaming response
-            ret.sendMessageGenerator = await trpc.chatMessages.send.mutate({
-                message: initialChatMessage,
-                chatID: params.chatID,
-            });
-            // The next time this page loads we don't want to start streaming the message
-            // again
-            context.initialChatMessage = null;
         }
 
         return ret;
@@ -58,27 +68,124 @@ export const Route = createFileRoute('/c/$chatID')({
 });
 
 function Chat() {
+    const { session } = Route.useRouteContext();
     const { chatID } = Route.useParams();
-    const { initialMessage, sendMessageGenerator } = useLoaderData({
+    const { initialMessage } = useLoaderData({
         from: '/c/$chatID',
     });
 
-    const [messageIsPending, startTransition] = useTransition();
-    const [messages, setMessages] = useState<DBChatMessage[]>([]);
-    const [optimisticMessages, addOptimisticMessage] = useOptimistic(
-        messages,
-        (state: DBChatMessage[], newMessage: DBChatMessage) => {
-            // If you pass in a message with the same ID just update it
-            const existingId = state.findIndex((m) => m.id === newMessage.id);
-            if (existingId !== -1) {
-                const newState = [...state];
-                newState[existingId] = newMessage;
-                return newState;
-            } else {
-                return [...state, newMessage];
+    const messagesInfiniteQuery =
+        trpc.chatMessages.infiniteList.useInfiniteQuery(
+            {
+                chatID,
+                limit: 10,
+            },
+            {
+                getNextPageParam: (lastPage) => lastPage.nextCursor,
+            },
+        );
+
+    const messages = messagesInfiniteQuery.data
+        ? messagesInfiniteQuery.data.pages.flatMap((page) =>
+              page.items
+                  .slice()
+                  .reverse()
+                  .map((item) => ({
+                      ...item,
+                      createdAt: DateTime.fromISO(item.createdAt).toJSDate(),
+                      updatedAt: DateTime.fromISO(item.updatedAt).toJSDate(),
+                  })),
+          )
+        : [];
+
+    const infiniteMessagesQueryKey = getQueryKey(
+        trpc.chatMessages.infiniteList,
+        {
+            chatID,
+            limit: 10,
+        },
+        'infinite',
+    );
+    type InfiniteQueryData = {
+        pages: TRPCOutputs['chatMessages']['infiniteList'][];
+    };
+    const getNewPageData = (
+        prevData: InfiniteQueryData,
+        message: TRPCOutputs['chatMessages']['infiniteList']['items'][0],
+    ) => {
+        const updatedPage = {
+            ...prevData.pages[0],
+        };
+        updatedPage.items.unshift(message);
+        return {
+            ...prevData,
+            pages: [updatedPage, ...prevData.pages.slice(1)],
+        };
+    };
+
+    const sendMessageMutation = trpc.chatMessages.send.useMutation({
+        onMutate: (variables) => {
+            // Optimistically set the user message
+            queryClient.setQueryData(
+                infiniteMessagesQueryKey,
+                (prevData: InfiniteQueryData) =>
+                    getNewPageData(prevData, {
+                        id: 'OPTIMISTIC_USER_MESSAGE',
+                        chatID,
+                        userID: session?.user.id ?? '',
+                        messageType: 'user',
+                        messageContent: variables.message,
+                        createdAt: DateTime.now().toISO(),
+                        updatedAt: DateTime.now().toISO(),
+                    }),
+            );
+        },
+        onSuccess: async (data) => {
+            console.log('ON SUCCESS START');
+            console.log('START ITERATE');
+
+            for await (const chunk of data) {
+                if (chunk.type === 'userMessage') {
+                    queryClient.setQueryData(
+                        infiniteMessagesQueryKey,
+                        (prevData: InfiniteQueryData) => {
+                            const newData = getNewPageData(
+                                prevData,
+                                chunk.message,
+                            );
+                            // Remove optimistic message
+                            newData.pages[0].items =
+                                newData.pages[0].items.filter(
+                                    (item) =>
+                                        item.id !== 'OPTIMISTIC_USER_MESSAGE',
+                                );
+                            return newData;
+                        },
+                    );
+                } else if (chunk.type === 'messageChunk') {
+                    setCurrentlyStreamingMessage((m) => {
+                        const chunkContent = chunk.messageChunk.messageContent;
+                        if (m === null) {
+                            return chunkContent;
+                        } else {
+                            return m + chunk.messageChunk.messageContent;
+                        }
+                    });
+                } else {
+                    queryClient.setQueryData(
+                        infiniteMessagesQueryKey,
+                        (prevData: InfiniteQueryData) =>
+                            getNewPageData(prevData, chunk.message),
+                    );
+                    // queryClient.setQueryData(
+                    //     infiniteMessagesQueryKey,
+                    //     prevData,
+                    // );
+                    setCurrentlyStreamingMessage(null);
+                }
             }
         },
-    );
+    });
     const [currentlyStreamingMessage, setCurrentlyStreamingMessage] = useState<
         string | null
     >(null);
@@ -112,97 +219,24 @@ function Chat() {
                 chatContainerRef.current.style.justifyContent = 'flex-start';
             }
         }
-    }, [optimisticMessages, currentlyStreamingMessage]);
+    }, [messages, currentlyStreamingMessage]);
 
-    // Save a callback that processes message chunks and adds them to the state
-    const handleMessageGenerator = useCallback(
-        async (sendMessageGenerator: TRPCOutputs['chatMessages']['send']) => {
-            for await (const chunk of sendMessageGenerator) {
-                if (chunk.type === 'userMessage') {
-                    setMessages((ms) => [
-                        ...ms,
-                        {
-                            ...chunk.message,
-                            createdAt: DateTime.fromISO(
-                                chunk.message.createdAt,
-                            ).toJSDate(),
-                            updatedAt: DateTime.fromISO(
-                                chunk.message.updatedAt,
-                            ).toJSDate(),
-                        },
-                    ]);
-                } else if (chunk.type === 'messageChunk') {
-                    setCurrentlyStreamingMessage((m) => {
-                        const chunkContent = chunk.messageChunk.messageContent;
-                        if (m === null) {
-                            return chunkContent;
-                        } else {
-                            return m + chunk.messageChunk.messageContent;
-                        }
-                    });
-                } else {
-                    setMessages((ms) => [
-                        ...ms,
-                        {
-                            ...chunk.message,
-                            createdAt: DateTime.fromISO(
-                                chunk.message.createdAt,
-                            ).toJSDate(),
-                            updatedAt: DateTime.fromISO(
-                                chunk.message.updatedAt,
-                            ).toJSDate(),
-                        },
-                    ]);
-                    setCurrentlyStreamingMessage(null);
-                }
-            }
-        },
-        [],
-    );
-
-    // If it was passed a sendMessageGenerator then it means we have a message to immediately start
-    // rendering
-    useEffect(() => {
-        const processMessages = async () => {
-            if (initialMessage && sendMessageGenerator) {
-                addOptimisticMessage(initialMessage);
-                try {
-                    await handleMessageGenerator(sendMessageGenerator);
-                } catch (e) {
-                    console.error('[ERROR] Initial stream:', e);
-                }
-            }
-        };
-        processMessages();
-    }, [
-        sendMessageGenerator,
-        handleMessageGenerator,
-        initialMessage,
-        addOptimisticMessage,
-    ]);
+    // If it was passed an initialMessage then it means we have a message to immediately
+    // start rendering
+    // useEffect(() => {
+    //     console.log('EFFECT', initialMessage);
+    //     if (initialMessage) {
+    //         sendMessageMutation.mutate({
+    //             chatID,
+    //             message: initialMessage.messageContent,
+    //         });
+    //     }
+    // }, [chatID, initialMessage, sendMessageMutation.mutate]);
 
     const handleSubmit = (message: string) => {
-        const sendMessage = async () => {
-            const sendMessageGenerator = await trpc.chatMessages.send.mutate({
-                message: message,
-                chatID: chatID,
-            });
-            await handleMessageGenerator(sendMessageGenerator);
-        };
-
-        // Optimistically add the user's message, then start processing the async
-        // generator
-        startTransition(() => {
-            addOptimisticMessage({
-                id: ulid(),
-                userID: '',
-                chatID: chatID,
-                messageType: 'user',
-                messageContent: message,
-                createdAt: DateTime.now().toJSDate(),
-                updatedAt: DateTime.now().toJSDate(),
-            });
-            sendMessage();
+        sendMessageMutation.mutate({
+            chatID,
+            message,
         });
     };
 
@@ -214,7 +248,7 @@ function Chat() {
             >
                 <div className="w-full max-w-4xl flex-grow flex flex-col items-center">
                     <div className="h-2" />
-                    {optimisticMessages.map((m) => (
+                    {messages.map((m) => (
                         <Message key={m.id} message={m} />
                     ))}
                     {currentlyStreamingMessage && (
