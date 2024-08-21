@@ -2,7 +2,8 @@
     "recommendations": [
         "biomejs.biome",
         "bradlc.vscode-tailwindcss",
-        "yoavbls.pretty-ts-errors"
+        "yoavbls.pretty-ts-errors",
+        "tamasfe.even-better-toml"
     ],
     "editor.formatOnSave": true,
     "files.encoding": "utf8",

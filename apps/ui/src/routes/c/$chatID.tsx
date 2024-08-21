@@ -1,55 +1,43 @@
 import InputBox from '@/components/InputBox';
 import Message, { AssistantMessage } from '@/components/ui/chat/message';
-import UserIcon from '@/components/ui/userIcon';
-import { type TRPCOutputs, trpc } from '@/lib/trpc';
-import { MilkdownProvider } from '@milkdown/react';
-import type { DBChatMessage } from '@repo/db';
+import { queryClient } from '@/lib/reactQuery';
+import { type TRPCOutputs, trpc, trpcQueryUtils } from '@/lib/trpc';
+import type { AsyncGeneratorYieldType } from '@/lib/utils';
 import {
     createFileRoute,
+    redirect,
     useLoaderData,
-    useRouteContext,
 } from '@tanstack/react-router';
+import { getQueryKey } from '@trpc/react-query';
 import { DateTime } from 'luxon';
-import {
-    useCallback,
-    useEffect,
-    useLayoutEffect,
-    useOptimistic,
-    useRef,
-    useState,
-    useTransition,
-} from 'react';
-import { ulid } from 'ulid';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-type Loader = {
-    initialMessage: DBChatMessage | null;
-    sendMessageGenerator: TRPCOutputs['chat']['sendMessage'] | null;
+type InfiniteQueryData = {
+    pages: TRPCOutputs['chatMessages']['infiniteList'][];
 };
+
 export const Route = createFileRoute('/c/$chatID')({
     async loader({ context, params }) {
-        const initialChatMessage = context.initialChatMessage;
-
-        const ret: Loader = {
-            initialMessage: null,
-            sendMessageGenerator: null,
-        };
-
-        if (initialChatMessage != null) {
-            ret.initialMessage = {
-                id: ulid(),
-                userID: '',
-                chatID: params.chatID,
-                messageType: 'user',
-                messageContent: initialChatMessage,
-                createdAt: DateTime.now().toJSDate(),
-                updatedAt: DateTime.now().toJSDate(),
-            };
-            ret.sendMessageGenerator = await trpc.chat.sendMessage.mutate({
-                message: initialChatMessage,
-                chatID: params.chatID,
+        // If they're not logged in redirect to root to be logged in as anonymouse user
+        if (!context.session) {
+            throw redirect({
+                to: '/',
             });
-            context.initialChatMessage = null;
         }
+        // Some page redirecting to the chat could give us an initial chat message that
+        // should immediately start preocessing
+        const initialChatStream = context.initialChatStream;
+        context.initialChatStream = null;
+
+        // Put some data in the cache
+        await trpcQueryUtils.chatMessages.infiniteList.prefetchInfinite({
+            chatID: params.chatID,
+            limit: 10,
+        });
+
+        const ret = {
+            initialChatStream,
+        };
 
         return ret;
     },
@@ -57,159 +45,238 @@ export const Route = createFileRoute('/c/$chatID')({
 });
 
 function Chat() {
+    const { session } = Route.useRouteContext();
     const { chatID } = Route.useParams();
-    const { initialMessage, sendMessageGenerator } = useLoaderData({
+    const { initialChatStream } = useLoaderData({
         from: '/c/$chatID',
     });
 
-    const [messageIsPending, startTransition] = useTransition();
-    const [messages, setMessages] = useState<DBChatMessage[]>([]);
-    const [optimisticMessages, addOptimisticMessage] = useOptimistic(
-        messages,
-        (state: DBChatMessage[], newMessage: DBChatMessage) => {
-            const existingId = state.findIndex((m) => m.id === newMessage.id);
-            if (existingId !== -1) {
-                const newState = [...state];
-                newState[existingId] = newMessage;
-                return newState;
-            } else {
-                return [...state, newMessage];
-            }
+    const messagesInfiniteQuery =
+        trpc.chatMessages.infiniteList.useInfiniteQuery(
+            {
+                chatID,
+                limit: 10,
+            },
+            {
+                getNextPageParam: (lastPage) => lastPage.nextCursor,
+            },
+        );
+
+    const messages = messagesInfiniteQuery.data
+        ? messagesInfiniteQuery.data.pages.flatMap((page) =>
+              page.items.map((item) => ({
+                  ...item,
+                  createdAt: DateTime.fromISO(item.createdAt).toJSDate(),
+                  updatedAt: DateTime.fromISO(item.updatedAt).toJSDate(),
+              })),
+          )
+        : [];
+
+    const infiniteMessagesQueryKey = getQueryKey(
+        trpc.chatMessages.infiniteList,
+        {
+            chatID,
+            limit: 10,
         },
+        'infinite',
     );
+    const getNewPageData = (
+        prevData: InfiniteQueryData,
+        message: TRPCOutputs['chatMessages']['infiniteList']['items'][0],
+    ) => {
+        const updatedPage = { ...prevData.pages[0] };
+        const existingMessageIndex = updatedPage.items.findIndex(
+            (item) => item.id === message.id,
+        );
+
+        if (existingMessageIndex !== -1) {
+            // If the message already exists, update it in place
+            updatedPage.items = [
+                ...updatedPage.items.slice(0, existingMessageIndex),
+                message,
+                ...updatedPage.items.slice(existingMessageIndex + 1),
+            ];
+        } else {
+            // If it's a new message, add it to the beginning of the array
+            updatedPage.items = [message, ...updatedPage.items];
+        }
+
+        return {
+            ...prevData,
+            pages: [updatedPage, ...prevData.pages.slice(1)],
+        };
+    };
+
+    const processMessageChunk = async (
+        chunk: AsyncGeneratorYieldType<TRPCOutputs['chatMessages']['send']>,
+    ): Promise<void> => {
+        if (chunk.type === 'userMessage') {
+            queryClient.setQueryData(
+                infiniteMessagesQueryKey,
+                (prevData: InfiniteQueryData) => {
+                    const newData = getNewPageData(prevData, chunk.message);
+                    // Remove optimistic message
+                    newData.pages[0].items = newData.pages[0].items.filter(
+                        (item) => item.id !== 'OPTIMISTIC_USER_MESSAGE',
+                    );
+                    return newData;
+                },
+            );
+        } else if (chunk.type === 'messageChunk') {
+            setCurrentlyStreamingMessage((m) => {
+                const chunkContent = chunk.messageChunk.messageContent;
+                if (m === null) {
+                    return chunkContent;
+                } else {
+                    return m + chunk.messageChunk.messageContent;
+                }
+            });
+        } else {
+            queryClient.setQueryData(
+                infiniteMessagesQueryKey,
+                (prevData: InfiniteQueryData) =>
+                    getNewPageData(prevData, chunk.message),
+            );
+            setCurrentlyStreamingMessage(null);
+        }
+    };
+
+    const sendMessageMutation = trpc.chatMessages.send.useMutation({
+        onMutate: (variables) => {
+            // Optimistically set the user message
+            queryClient.setQueryData(
+                infiniteMessagesQueryKey,
+                (prevData: InfiniteQueryData) =>
+                    getNewPageData(prevData, {
+                        id: 'OPTIMISTIC_USER_MESSAGE',
+                        chatID,
+                        userID: session?.user.id ?? '',
+                        messageType: 'user',
+                        messageContent: variables.message,
+                        responseStatus: 'not_started',
+                        createdAt: DateTime.now().toISO(),
+                        updatedAt: DateTime.now().toISO(),
+                    }),
+            );
+        },
+        onSuccess: async (data, variables, context) => {
+            for await (const chunk of data) {
+                processMessageChunk(chunk);
+            }
+            queryClient.invalidateQueries({
+                queryKey: infiniteMessagesQueryKey,
+            });
+        },
+    });
+
     const [currentlyStreamingMessage, setCurrentlyStreamingMessage] = useState<
         string | null
     >(null);
 
+    // We keep a ref to the chat and the bottom of the message
     const chatContainerRef = useRef<HTMLDivElement>(null);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const chatMessagesRef = useRef<HTMLDivElement>(null);
+    const [isFull, setIsFull] = useState(false);
 
-    const checkContentFillsScreen = () => {
-        if (chatContainerRef.current && messagesEndRef.current) {
-            const containerHeight = chatContainerRef.current.clientHeight;
-            const contentHeight =
-                messagesEndRef.current.offsetTop +
-                messagesEndRef.current.clientHeight;
-            return contentHeight >= containerHeight;
-        }
-        return false;
-    };
-
-    // biome-ignore lint/correctness/useExhaustiveDependencies: Don't need to wrap in useCallback
+    // biome-ignore lint/correctness/useExhaustiveDependencies: It's fine
     useLayoutEffect(() => {
-        if (chatContainerRef.current) {
+        // If the entire screen is filled out, then we want to start rendering messages
+        // from the bottom, like the chat is getting pushed upwards each new message.
+        // We do it in a layout effect to apply changes before the DOM gets painted,
+        // allowing for smoother animation.
+
+        const checkContentFillsScreen = () => {
+            if (chatContainerRef.current && chatMessagesRef.current) {
+                const containerHeight = chatContainerRef.current.clientHeight;
+                const contentHeight = chatMessagesRef.current.scrollHeight;
+                return contentHeight > containerHeight;
+            }
+            return false;
+        };
+
+        if (chatMessagesRef.current) {
             if (checkContentFillsScreen()) {
-                chatContainerRef.current.style.justifyContent = 'flex-end';
+                chatMessagesRef.current.style.flexDirection = 'column-reverse';
+                setIsFull(true);
             } else {
-                chatContainerRef.current.style.justifyContent = 'flex-start';
+                chatMessagesRef.current.style.flexDirection = 'column';
+                setIsFull(false);
             }
         }
-    }, [optimisticMessages, currentlyStreamingMessage]);
+    }, [messages, currentlyStreamingMessage]);
 
-    const handleMessageGenerator = useCallback(
-        async (sendMessageGenerator: TRPCOutputs['chat']['sendMessage']) => {
-            for await (const chunk of sendMessageGenerator) {
-                if (chunk.type === 'userMessage') {
-                    setMessages((ms) => [
-                        ...ms,
-                        {
-                            ...chunk.message,
-                            createdAt: DateTime.fromISO(
-                                chunk.message.createdAt,
-                            ).toJSDate(),
-                            updatedAt: DateTime.fromISO(
-                                chunk.message.updatedAt,
-                            ).toJSDate(),
-                        },
-                    ]);
-                } else if (chunk.type === 'messageChunk') {
-                    setCurrentlyStreamingMessage((m) => {
-                        const chunkContent = chunk.messageChunk.messageContent;
-                        if (m === null) {
-                            return chunkContent;
-                        } else {
-                            return m + chunk.messageChunk.messageContent;
-                        }
-                    });
-                } else {
-                    setMessages((ms) => [
-                        ...ms,
-                        {
-                            ...chunk.message,
-                            createdAt: DateTime.fromISO(
-                                chunk.message.createdAt,
-                            ).toJSDate(),
-                            updatedAt: DateTime.fromISO(
-                                chunk.message.updatedAt,
-                            ).toJSDate(),
-                        },
-                    ]);
-                    setCurrentlyStreamingMessage(null);
-                }
-            }
-        },
-        [],
-    );
-
-    // If it was passed a sendMessageGenerator then it means we have a message to immediately start
-    // rendering
+    // If it was passed an initialMessage then it means we have a message to immediately
+    // start rendering
+    // biome-ignore lint/correctness/useExhaustiveDependencies: It's fine
     useEffect(() => {
-        const processMessages = async () => {
-            if (initialMessage && sendMessageGenerator) {
-                addOptimisticMessage(initialMessage);
-                try {
-                    await handleMessageGenerator(sendMessageGenerator);
-                } catch (e) {
-                    console.error('[ERROR] Initial stream:', e);
+        if (!initialChatStream) return;
+
+        let isMounted = true;
+        // This doesn't totally work since the reader is async, so when you release the
+        // lock there could be a pending read which would then error. However, it still
+        // works so I'm just going to leave it like this because I don't know how to
+        // fix it
+        const reader = initialChatStream.getReader();
+
+        const readStream = async () => {
+            try {
+                while (isMounted) {
+                    const { done, value: chunk } = await reader.read();
+                    if (done) {
+                        queryClient.invalidateQueries({
+                            queryKey: infiniteMessagesQueryKey,
+                        });
+                        break;
+                    }
+
+                    processMessageChunk(chunk);
                 }
+            } catch (err) {
+                console.error('[ERROR] failed reading stream:', err);
+            } finally {
+                reader.releaseLock();
             }
         };
-        processMessages();
-    }, [
-        sendMessageGenerator,
-        handleMessageGenerator,
-        initialMessage,
-        addOptimisticMessage,
-    ]);
+
+        readStream();
+
+        return () => {
+            isMounted = false;
+            reader.releaseLock();
+        };
+    }, [initialChatStream]);
 
     const handleSubmit = (message: string) => {
-        const sendMessage = async () => {
-            const sendMessageGenerator = await trpc.chat.sendMessage.mutate({
-                message: message,
-                chatID: chatID,
+        if (!sendMessageMutation.isPending) {
+            sendMessageMutation.mutate({
+                chatID,
+                message,
             });
-            await handleMessageGenerator(sendMessageGenerator);
-        };
-
-        startTransition(() => {
-            addOptimisticMessage({
-                id: ulid(),
-                userID: '',
-                chatID: chatID,
-                messageType: 'user',
-                messageContent: message,
-                createdAt: DateTime.now().toJSDate(),
-                updatedAt: DateTime.now().toJSDate(),
-            });
-            sendMessage();
-        });
+        }
     };
 
     return (
         <div className="w-full h-full flex flex-col">
             <div
                 ref={chatContainerRef}
-                className="w-full flex-1 flex flex-col items-center overflow-y-auto"
+                className="w-full h-full flex flex-col items-center"
             >
-                <div className="w-full max-w-4xl flex-grow flex flex-col items-center">
+                <div
+                    ref={chatMessagesRef}
+                    className="w-full max-w-4xl flex-grow flex items-center overflow-y-scroll mb-24"
+                >
                     <div className="h-2" />
-                    {optimisticMessages.map((m) => (
-                        <Message key={m.id} message={m} />
-                    ))}
-                    {currentlyStreamingMessage && (
+                    {currentlyStreamingMessage && isFull && (
                         <AssistantMessage message={currentlyStreamingMessage} />
                     )}
-                    <div ref={messagesEndRef} className="h-20" />
+                    {(isFull ? messages : messages.slice().reverse()).map(
+                        (m) => (
+                            <Message key={m.id} message={m} />
+                        ),
+                    )}
+                    {currentlyStreamingMessage && !isFull && (
+                        <AssistantMessage message={currentlyStreamingMessage} />
+                    )}
                 </div>
             </div>
             <div className="fixed bottom-0 self-center w-full max-w-4xl rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-hidden pb-2">

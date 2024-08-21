@@ -1,21 +1,13 @@
 import InputBox from '@/components/InputBox';
-import { MilkdownEditor } from '@/components/Milkdown/Milkdown';
 import { Button } from '@/components/ui/button';
-import { trpc } from '@/lib/trpc';
-import { editorViewCtx } from '@milkdown/core';
-import type { Ctx } from '@milkdown/ctx';
-import { TextSelection } from '@milkdown/prose/state';
-import { MilkdownProvider, useInstance } from '@milkdown/react';
-import { getMarkdown } from '@milkdown/utils';
+import { type TRPCOutputs, trpc } from '@/lib/trpc';
+import type { AsyncGeneratorYieldType } from '@/lib/utils';
 import {
-    createFileRoute,
     createLazyFileRoute,
     useRouteContext,
     useRouter,
 } from '@tanstack/react-router';
-import { ArrowUp } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useCallback, useEffect, useState } from 'react';
 
 export const Route = createLazyFileRoute('/')({
     component: Index,
@@ -23,7 +15,11 @@ export const Route = createLazyFileRoute('/')({
 
 function Index() {
     const router = useRouter();
-    const createChatCtx = useRouteContext({ from: '/' });
+    const context = useRouteContext({ from: '/' });
+
+    const createChatMutation = trpc.chat.create.useMutation();
+    const generateResponseMutation =
+        trpc.chatMessages.generateResponse.useMutation();
 
     const getGreeting = () => {
         const hour = DateTime.local().hour;
@@ -37,8 +33,34 @@ function Index() {
     };
 
     const handleSubmit = async (text: string): Promise<void> => {
-        const createChatResp = await trpc.chat.createChat.mutate();
-        createChatCtx.initialChatMessage = text;
+        // Create the chat and send the first message
+        const createChatResp = await createChatMutation.mutateAsync({
+            initialMessage: text,
+        });
+        const generateResponseResp = await generateResponseMutation.mutateAsync(
+            {
+                messageID: createChatResp.messages[0].id,
+            },
+        );
+
+        // Convert the async generator into a readable stream
+        const stream = new ReadableStream<
+            AsyncGeneratorYieldType<
+                TRPCOutputs['chatMessages']['generateResponse']
+            >
+        >({
+            async start(controller) {
+                for await (const chunk of generateResponseResp) {
+                    controller.enqueue(chunk);
+                }
+                controller.close();
+            },
+        });
+
+        // Now the stream gets passed into the router context so you can just keep
+        // reading from it without worrying about resetting it
+
+        context.initialChatStream = stream;
         router.navigate({
             from: '/',
             to: '/c/$chatID',
@@ -57,6 +79,9 @@ function Index() {
                     placeholderText="How can Charlie help you today?"
                 />
             </div>
+            {(!context.session || context.session.user.is_anonymous) && (
+                <Button className="w-72 mt-6">Log in with Google</Button>
+            )}
         </div>
     );
 }
