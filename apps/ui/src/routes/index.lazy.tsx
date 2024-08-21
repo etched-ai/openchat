@@ -1,6 +1,7 @@
 import InputBox from '@/components/InputBox';
 import { Button } from '@/components/ui/button';
-import { trpc } from '@/lib/trpc';
+import { type TRPCOutputs, trpc } from '@/lib/trpc';
+import type { AsyncGeneratorYieldType } from '@/lib/utils';
 import {
     createLazyFileRoute,
     useRouteContext,
@@ -17,6 +18,8 @@ function Index() {
     const context = useRouteContext({ from: '/' });
 
     const createChatMutation = trpc.chat.create.useMutation();
+    const generateResponseMutation =
+        trpc.chatMessages.generateResponse.useMutation();
 
     const getGreeting = () => {
         const hour = DateTime.local().hour;
@@ -30,9 +33,34 @@ function Index() {
     };
 
     const handleSubmit = async (text: string): Promise<void> => {
-        const createChatResp = await createChatMutation.mutateAsync();
-        console.log(createChatResp);
-        context.initialChatMessage = text;
+        // Create the chat and send the first message
+        const createChatResp = await createChatMutation.mutateAsync({
+            initialMessage: text,
+        });
+        const generateResponseResp = await generateResponseMutation.mutateAsync(
+            {
+                messageID: createChatResp.messages[0].id,
+            },
+        );
+
+        // Convert the async generator into a readable stream
+        const stream = new ReadableStream<
+            AsyncGeneratorYieldType<
+                TRPCOutputs['chatMessages']['generateResponse']
+            >
+        >({
+            async start(controller) {
+                for await (const chunk of generateResponseResp) {
+                    controller.enqueue(chunk);
+                }
+                controller.close();
+            },
+        });
+
+        // Now the stream gets passed into the router context so you can just keep
+        // reading from it without worrying about resetting it
+
+        context.initialChatStream = stream;
         router.navigate({
             from: '/',
             to: '/c/$chatID',

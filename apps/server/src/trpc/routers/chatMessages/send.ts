@@ -1,5 +1,5 @@
-// This procedure creates a user/assistant message pair and streams down the assistant message is it's
-// being generated.
+// This procedure creates a user message and optionally streams down an assistant
+// message.
 
 import { type DBChatMessage, DBChatMessageSchema } from '@repo/db';
 import { DateTime } from 'luxon';
@@ -13,6 +13,7 @@ export const SendMessageSchema = z.object({
     customSystemPrompt: z.string().optional(),
     previousMessages: z.array(DBChatMessageSchema).optional(),
     chatID: z.string(),
+    generateResponse: z.boolean().default(true),
 });
 type SendMessageOutput =
     | {
@@ -36,13 +37,14 @@ export const send = publicProcedure
     }): AsyncGenerator<SendMessageOutput> {
         console.log('SENDING CHAT MESSAGE');
         // First create the user's message in the DB and send it back down.
-        const newUserMessage = await createDBChatMessage(
+        const newUserMessage = await upsertDBChatMessage(
             {
                 id: ulid(),
                 userID: ctx.user.id,
                 chatID: input.chatID,
                 messageType: 'user',
                 messageContent: input.message,
+                responseStatus: 'not_started',
             },
             ctx.dbPool,
         );
@@ -51,19 +53,30 @@ export const send = publicProcedure
             message: newUserMessage,
         };
 
-        const openaiClient = ctx.aiService.getOpenAIClient();
-        const chatMessages = ctx.aiService.getChatPromptMessages({
-            newMessage: input.message,
+        if (!input.generateResponse) {
+            // Done
+            return;
+        }
+
+        let messageID = ulid();
+        await updateDBChatMessage(
+            {
+                messageID: newUserMessage.id,
+                responseStatus: 'streaming',
+                responseMessageID: messageID,
+            },
+            ctx.dbPool,
+        );
+
+        const chatIterator = ctx.chatService.generateResponse({
+            userID: ctx.user.id,
+            chatID: input.chatID,
+            message: input.message,
+            messageID,
             previousMessages: input.previousMessages,
             customSystemPrompt: input.customSystemPrompt,
         });
-        const chatIterator = await openaiClient.chat.completions.create({
-            model: ctx.aiService.getModelName(),
-            messages: chatMessages,
-            stream: true,
-        });
 
-        const messageID = ulid();
         let fullMessage = '';
         for await (const chunk of chatIterator) {
             // While the message is in the process of generating, we do not do database updates to it.
@@ -72,20 +85,13 @@ export const send = publicProcedure
             // generation to just disappear as if it never happened.
             yield {
                 type: 'messageChunk',
-                messageChunk: {
-                    id: messageID,
-                    userID: ctx.user.id,
-                    chatID: input.chatID,
-                    messageType: 'assistant',
-                    messageContent: chunk.choices[0]?.delta.content || '',
-                    createdAt: DateTime.now().toJSDate(),
-                    updatedAt: DateTime.now().toJSDate(),
-                } satisfies DBChatMessage,
+                messageChunk: chunk,
             };
-            fullMessage += chunk.choices[0]?.delta.content || '';
+            messageID = chunk.id;
+            fullMessage += chunk.messageContent;
         }
 
-        const completedAssistantMessage = await createDBChatMessage(
+        const completedAssistantMessage = await upsertDBChatMessage(
             {
                 id: messageID,
                 userID: ctx.user.id,
@@ -99,10 +105,18 @@ export const send = publicProcedure
             type: 'completeMessage',
             message: completedAssistantMessage,
         };
+
+        await updateDBChatMessage(
+            {
+                messageID: newUserMessage.id,
+                responseStatus: 'done',
+            },
+            ctx.dbPool,
+        );
     });
 
 type StrippedDBChatMessage = Omit<DBChatMessage, 'createdAt' | 'updatedAt'>;
-async function createDBChatMessage(
+export async function upsertDBChatMessage(
     message: StrippedDBChatMessage,
     pool: DatabasePool,
 ): Promise<DBChatMessage> {
@@ -114,6 +128,8 @@ async function createDBChatMessage(
                 "chatID",
                 "messageType",
                 "messageContent",
+                "responseStatus",
+                "responseMessageID",
                 "createdAt",
                 "updatedAt"
             ) VALUES (
@@ -122,9 +138,65 @@ async function createDBChatMessage(
                 ${message.chatID},
                 ${message.messageType},
                 ${message.messageContent},
+                ${message.responseStatus ?? sql.fragment`NULL`},
+                ${message.responseMessageID ?? sql.fragment`NULL`},
                 CURRENT_TIMESTAMP,
                 CURRENT_TIMESTAMP
             )
+            ON CONFLICT (id) DO UPDATE SET
+                "userID" = EXCLUDED."userID",
+                "chatID" = EXCLUDED."chatID",
+                "messageType" = EXCLUDED."messageType",
+                "messageContent" = EXCLUDED."messageContent",
+                "responseStatus" = EXCLUDED."responseStatus",
+                "responseMessageID" = EXCLUDED."responseMessageID",
+                "updatedAt" = CURRENT_TIMESTAMP
+            RETURNING *;
+        `);
+    } catch (e) {
+        console.error(e);
+        throw e;
+    }
+}
+
+type UpdateDBChatMessageParams = {
+    messageID: string;
+    responseStatus?: DBChatMessage['responseStatus'];
+    responseMessageID?: string;
+};
+export async function updateDBChatMessage(
+    params: UpdateDBChatMessageParams,
+    pool: DatabasePool,
+): Promise<DBChatMessage> {
+    const { messageID, responseStatus, responseMessageID } = params;
+
+    try {
+        const updateFields = [];
+
+        if (responseStatus !== undefined) {
+            updateFields.push(
+                sql.fragment`"responseStatus" = ${responseStatus === null ? sql.fragment`NULL` : responseStatus}`,
+            );
+        }
+
+        if (responseMessageID !== undefined) {
+            updateFields.push(
+                sql.fragment`"responseMessageID" = ${responseMessageID}`,
+            );
+        }
+
+        if (updateFields.length === 0) {
+            throw new Error('No fields to update');
+        }
+
+        updateFields.push(sql.fragment`"updatedAt" = CURRENT_TIMESTAMP`);
+
+        const updateFieldsSQL = sql.join(updateFields, sql.fragment`, `);
+
+        return await pool.one(sql.type(DBChatMessageSchema)`
+            UPDATE "ChatMessage"
+            SET ${updateFieldsSQL}
+            WHERE id = ${messageID}
             RETURNING *;
         `);
     } catch (e) {

@@ -29,6 +29,8 @@ export const infiniteList = publicProcedure
         // some reason
         const messagesToReturn: DBChatMessage[] = [...messages];
 
+        console.log('ALL MESSAGES', messages);
+
         let nextCursor: string | undefined = undefined;
         if (messages.length > limit) {
             const nextItem = messagesToReturn.pop();

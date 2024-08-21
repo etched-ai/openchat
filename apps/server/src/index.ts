@@ -9,6 +9,7 @@ import {
 } from '@trpc/server/adapters/fastify';
 import fastify from 'fastify';
 import AIServiceSingletonPlugin from './fastifyPlugins/AIServiceSingletonPlugin';
+import ChatServicePlugin from './fastifyPlugins/ChatServicePlugin';
 import SlonikDBSingletonPlugin from './fastifyPlugins/SlonikDBSingletonPlugin';
 import { createContext } from './trpc/context';
 import { type AppRouter, appRouter } from './trpc/router';
@@ -72,6 +73,9 @@ server.register(fastifyCors, {
 
 // Add AI Service as a singleton across fastify
 server.register(AIServiceSingletonPlugin);
+
+// Add a chat service
+server.register(ChatServicePlugin);
 
 // Add a db connection pool as a singleton across fastify
 server.register(SlonikDBSingletonPlugin);

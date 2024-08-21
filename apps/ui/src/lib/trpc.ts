@@ -34,3 +34,16 @@ export const trpcQueryUtils = createTRPCQueryUtils({
     queryClient,
     client: trpcClient,
 });
+
+export const vanillaTrpcClient = createTRPCClient({
+    links: [
+        unstable_httpBatchStreamLink({
+            url: `${API_BASE_URL}/trpc`,
+            headers() {
+                return {
+                    authorization: `Bearer ${token}`,
+                };
+            },
+        }),
+    ],
+});

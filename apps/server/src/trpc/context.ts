@@ -16,6 +16,7 @@ export async function createContext({ req, res }: CreateFastifyContextOptions) {
         res,
         user,
         aiService: req.server.aiService,
+        chatService: req.server.chatService,
         dbPool: req.server.dbPool,
     };
 }

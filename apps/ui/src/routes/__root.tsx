@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { setAuthToken } from '@/lib/trpc';
+import { type TRPCOutputs, setAuthToken } from '@/lib/trpc';
+import type { AsyncGeneratorYieldType } from '@/lib/utils';
 import type { Session } from '@supabase/supabase-js';
 import {
     Outlet,
@@ -9,7 +10,9 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 
 type RouterContext = {
-    initialChatMessage: string | null;
+    initialChatStream: ReadableStream<
+        AsyncGeneratorYieldType<TRPCOutputs['chatMessages']['generateResponse']>
+    > | null;
     session: Session | null;
 };
 
