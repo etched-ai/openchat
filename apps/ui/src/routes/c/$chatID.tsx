@@ -64,14 +64,11 @@ function Chat() {
 
     const messages = messagesInfiniteQuery.data
         ? messagesInfiniteQuery.data.pages.flatMap((page) =>
-              page.items
-                  .slice()
-                  .reverse()
-                  .map((item) => ({
-                      ...item,
-                      createdAt: DateTime.fromISO(item.createdAt).toJSDate(),
-                      updatedAt: DateTime.fromISO(item.updatedAt).toJSDate(),
-                  })),
+              page.items.map((item) => ({
+                  ...item,
+                  createdAt: DateTime.fromISO(item.createdAt).toJSDate(),
+                  updatedAt: DateTime.fromISO(item.updatedAt).toJSDate(),
+              })),
           )
         : [];
 
@@ -188,7 +185,6 @@ function Chat() {
         // We do it in a layout effect to apply changes before the DOM gets painted,
         // allowing for smoother animation.
 
-        // Util to see if the messages fill up the entire chat window
         const checkContentFillsScreen = () => {
             if (chatContainerRef.current && chatMessagesRef.current) {
                 const containerHeight = chatContainerRef.current.clientHeight;
@@ -273,7 +269,7 @@ function Chat() {
                     {currentlyStreamingMessage && isFull && (
                         <AssistantMessage message={currentlyStreamingMessage} />
                     )}
-                    {(isFull ? messages.slice().reverse() : messages).map(
+                    {(isFull ? messages : messages.slice().reverse()).map(
                         (m) => (
                             <Message key={m.id} message={m} />
                         ),
@@ -286,7 +282,7 @@ function Chat() {
             <div className="fixed bottom-0 self-center w-full max-w-4xl rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-hidden pb-2">
                 <InputBox
                     handleSubmit={handleSubmit}
-                    placeholderText="Reply to Vib..."
+                    placeholderText="Reply to Charlie..."
                 />
             </div>
         </div>
