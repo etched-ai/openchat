@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { publicProcedure } from '../../trpc';
 import {
     getPreviousChatMessages,
+    maybeSetChatPreview,
     updateDBChatMessage,
     upsertDBChatMessage,
 } from './send';
@@ -47,6 +48,14 @@ export const generateResponse = publicProcedure
             type: 'userMessage',
             message: chatMessage,
         };
+
+        await maybeSetChatPreview(
+            {
+                chatID: chatMessage.chatID,
+                message: chatMessage.messageContent,
+            },
+            ctx.dbPool,
+        );
 
         const previousMessages = await getPreviousChatMessages(
             { chatID: chatMessage.chatID },

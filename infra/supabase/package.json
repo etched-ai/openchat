@@ -2,8 +2,5 @@
     "name": "supabase",
     "version": "0.0.0",
     "private": true,
-    "license": "MIT",
-    "scripts": {
-        "dev": "supabase start"
-    }
+    "license": "MIT"
 }

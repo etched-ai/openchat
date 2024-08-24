@@ -39,7 +39,6 @@ export const send = publicProcedure
         input,
         ctx,
     }): AsyncGenerator<SendMessageOutput> {
-        console.log('SENDING CHAT MESSAGE');
         // First create the user's message in the DB and send it back down.
         const newUserMessage = await upsertDBChatMessage(
             {
@@ -248,7 +247,7 @@ export async function maybeSetChatPreview(
 ): Promise<void> {
     const { chatID, message } = params;
 
-    await pool.one(sql.type(DBChatSchema)`
+    await pool.any(sql.type(DBChatSchema)`
         UPDATE "Chat"
         SET "previewName" = ${message}
         WHERE id = ${chatID}

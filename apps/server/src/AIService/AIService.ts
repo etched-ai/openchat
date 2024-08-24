@@ -19,8 +19,6 @@ export default class AIService implements IAIService {
         const baseURL = process.env.OPENAI_BASE_URL;
         const apiKey = process.env.OPENAI_KEY ?? 'EMPTY';
 
-        if (!baseURL) throw new Error('Please set an OpenAI base URL');
-
         // Point this to your self-hosted OpenAI compatible server
         this._openaiClient = new OpenAI({
             baseURL,

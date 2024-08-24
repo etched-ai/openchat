@@ -20,13 +20,11 @@ export const create = publicProcedure
             INSERT INTO "Chat" (
                 id,
                 "userID",
-                "previewName",
                 "createdAt",
                 "updatedAt"
             ) VALUES (
                 ${chatID},
                 ${ctx.user.id},
-                ${''}, -- Empty string for previewName
                 CURRENT_TIMESTAMP,
                 CURRENT_TIMESTAMP
             )

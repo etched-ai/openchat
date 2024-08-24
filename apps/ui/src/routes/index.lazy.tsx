@@ -1,5 +1,6 @@
 import InputBox from '@/components/InputBox';
 import { Button } from '@/components/ui/button';
+import { queryClient } from '@/lib/reactQuery';
 import { type TRPCOutputs, trpc } from '@/lib/trpc';
 import type { AsyncGeneratorYieldType } from '@/lib/utils';
 import {
@@ -7,6 +8,7 @@ import {
     useRouteContext,
     useRouter,
 } from '@tanstack/react-router';
+import { getQueryKey } from '@trpc/react-query';
 import { DateTime } from 'luxon';
 
 export const Route = createLazyFileRoute('/')({
@@ -36,6 +38,9 @@ function Index() {
         // Create the chat and send the first message
         const createChatResp = await createChatMutation.mutateAsync({
             initialMessage: text,
+        });
+        await queryClient.invalidateQueries({
+            queryKey: getQueryKey(trpc.chat.infiniteList, undefined, 'any'),
         });
         const generateResponseResp = await generateResponseMutation.mutateAsync(
             {
