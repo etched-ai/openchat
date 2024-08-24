@@ -13,7 +13,6 @@ import { createFileRoute } from '@tanstack/react-router'
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as CImport } from './routes/c'
 import { Route as CChatIDImport } from './routes/c/$chatID'
 
 // Create Virtual Routes
@@ -22,19 +21,14 @@ const IndexLazyImport = createFileRoute('/')()
 
 // Create/Update Routes
 
-const CRoute = CImport.update({
-  path: '/c',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const IndexLazyRoute = IndexLazyImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 
 const CChatIDRoute = CChatIDImport.update({
-  path: '/$chatID',
-  getParentRoute: () => CRoute,
+  path: '/c/$chatID',
+  getParentRoute: () => rootRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -48,29 +42,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexLazyImport
       parentRoute: typeof rootRoute
     }
-    '/c': {
-      id: '/c'
-      path: '/c'
-      fullPath: '/c'
-      preLoaderRoute: typeof CImport
-      parentRoute: typeof rootRoute
-    }
     '/c/$chatID': {
       id: '/c/$chatID'
-      path: '/$chatID'
+      path: '/c/$chatID'
       fullPath: '/c/$chatID'
       preLoaderRoute: typeof CChatIDImport
-      parentRoute: typeof CImport
+      parentRoute: typeof rootRoute
     }
   }
 }
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({
-  IndexLazyRoute,
-  CRoute: CRoute.addChildren({ CChatIDRoute }),
-})
+export const routeTree = rootRoute.addChildren({ IndexLazyRoute, CChatIDRoute })
 
 /* prettier-ignore-end */
 
@@ -81,21 +65,14 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/c"
+        "/c/$chatID"
       ]
     },
     "/": {
       "filePath": "index.lazy.tsx"
     },
-    "/c": {
-      "filePath": "c.tsx",
-      "children": [
-        "/c/$chatID"
-      ]
-    },
     "/c/$chatID": {
-      "filePath": "c/$chatID.tsx",
-      "parent": "/c"
+      "filePath": "c/$chatID.tsx"
     }
   }
 }
