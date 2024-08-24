@@ -11,17 +11,29 @@ const Message: React.FC<MessageProps> = ({ message }) => {
     if (message.messageType === 'assistant') {
         return <AssistantMessage message={message.messageContent} />;
     } else {
-        return <UserMessage message={message.messageContent} />;
+        return (
+            <UserMessage
+                userID={message.userID}
+                message={message.messageContent}
+            />
+        );
     }
 };
-type SpecificMessageProps = {
+type BaseMessageProps = {
     message: string;
 };
-export const UserMessage: React.FC<SpecificMessageProps> = ({ message }) => {
+
+type UserMessageProps = BaseMessageProps & {
+    userID: string;
+};
+export const UserMessage: React.FC<UserMessageProps> = ({
+    message,
+    userID,
+}) => {
     return (
         <div className="w-[40vw] p-2 rounded-lg mt-2 mb-2 flex flex-row bg-accent">
             <div>
-                <UserIcon userId="temp" className="mr-4" />
+                <UserIcon userID={userID} className="mr-4" />
             </div>
             <div className="flex-1 pt-2">
                 <MarkdownRenderer content={message} />
@@ -29,9 +41,7 @@ export const UserMessage: React.FC<SpecificMessageProps> = ({ message }) => {
         </div>
     );
 };
-export const AssistantMessage: React.FC<SpecificMessageProps> = ({
-    message,
-}) => {
+export const AssistantMessage: React.FC<BaseMessageProps> = ({ message }) => {
     return (
         <div className="w-[40vw] p-3 rounded-lg mt-2 mb-2 flex flex-row bg-muted/85">
             <div className="flex w-full">

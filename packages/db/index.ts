@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const DBChatSchema = z.object({
     id: z.string().ulid(),
     userID: z.string().uuid(),
-    previewName: z.string(),
+    previewName: z.string().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),
 });

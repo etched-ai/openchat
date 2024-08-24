@@ -12,7 +12,7 @@ const PASTEL_COLORS: string[] = [
     'bg-red-300',
 ];
 
-const getColorFromId = (id: string): string => {
+const getColorFromID = (id: string): string => {
     let hash = 0;
     for (let i = 0; i < id.length; i++) {
         const char = id.charCodeAt(i);
@@ -29,11 +29,11 @@ const getColorFromId = (id: string): string => {
 };
 
 type Props = {
-    userId: string;
+    userID: string;
     name?: string;
 } & ComponentProps<'div'>;
-const UserIcon: React.FC<Props> = ({ userId, name, ...props }) => {
-    const bgColor = useMemo(() => getColorFromId(userId), [userId]);
+const UserIcon: React.FC<Props> = ({ userID, name, ...props }) => {
+    const bgColor = useMemo(() => getColorFromID(userID), [userID]);
     let display: string | ReactNode;
     if (name) {
         display = name

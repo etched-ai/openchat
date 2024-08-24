@@ -5,7 +5,12 @@ import { type DBChatMessage, DBChatMessageSchema } from '@repo/db';
 import { type DatabasePool, sql } from 'slonik';
 import { z } from 'zod';
 import { publicProcedure } from '../../trpc';
-import { updateDBChatMessage, upsertDBChatMessage } from './send';
+import {
+    getPreviousChatMessages,
+    maybeSetChatPreview,
+    updateDBChatMessage,
+    upsertDBChatMessage,
+} from './send';
 
 export const GenerateResponseSchema = z.object({
     messageID: z.string().ulid(),
@@ -44,14 +49,26 @@ export const generateResponse = publicProcedure
             message: chatMessage,
         };
 
+        await maybeSetChatPreview(
+            {
+                chatID: chatMessage.chatID,
+                message: chatMessage.messageContent,
+            },
+            ctx.dbPool,
+        );
+
+        const previousMessages = await getPreviousChatMessages(
+            { chatID: chatMessage.chatID },
+            ctx.dbPool,
+        );
+
         let messageID = chatMessage.responseMessageID;
         const chatIterator = ctx.chatService.generateResponse({
             userID: ctx.user.id,
             chatID: chatMessage.chatID,
             message: chatMessage.messageContent,
             messageID,
-            // TODO
-            previousMessages: [],
+            previousMessages: previousMessages.slice(1),
             customSystemPrompt: undefined,
         });
 

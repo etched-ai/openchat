@@ -1,7 +1,12 @@
 // This procedure creates a user message and optionally streams down an assistant
 // message.
 
-import { type DBChatMessage, DBChatMessageSchema } from '@repo/db';
+import {
+    DBChat,
+    type DBChatMessage,
+    DBChatMessageSchema,
+    DBChatSchema,
+} from '@repo/db';
 import { DateTime } from 'luxon';
 import { type DatabasePool, sql } from 'slonik';
 import { ulid } from 'ulid';
@@ -11,7 +16,6 @@ import { publicProcedure } from '../../trpc';
 export const SendMessageSchema = z.object({
     message: z.string(),
     customSystemPrompt: z.string().optional(),
-    previousMessages: z.array(DBChatMessageSchema).optional(),
     chatID: z.string(),
     generateResponse: z.boolean().default(true),
 });
@@ -35,7 +39,6 @@ export const send = publicProcedure
         input,
         ctx,
     }): AsyncGenerator<SendMessageOutput> {
-        console.log('SENDING CHAT MESSAGE');
         // First create the user's message in the DB and send it back down.
         const newUserMessage = await upsertDBChatMessage(
             {
@@ -53,6 +56,11 @@ export const send = publicProcedure
             message: newUserMessage,
         };
 
+        await maybeSetChatPreview(
+            { chatID: input.chatID, message: input.message },
+            ctx.dbPool,
+        );
+
         if (!input.generateResponse) {
             // Done
             return;
@@ -68,12 +76,17 @@ export const send = publicProcedure
             ctx.dbPool,
         );
 
+        const previousMessages = await getPreviousChatMessages(
+            { chatID: input.chatID },
+            ctx.dbPool,
+        );
+
         const chatIterator = ctx.chatService.generateResponse({
             userID: ctx.user.id,
             chatID: input.chatID,
             message: input.message,
             messageID,
-            previousMessages: input.previousMessages,
+            previousMessages: previousMessages.slice(1),
             customSystemPrompt: input.customSystemPrompt,
         });
 
@@ -203,4 +216,41 @@ export async function updateDBChatMessage(
         console.error(e);
         throw e;
     }
+}
+
+type GetPreviousChatMessagesParams = {
+    chatID: string;
+};
+export async function getPreviousChatMessages(
+    params: GetPreviousChatMessagesParams,
+    pool: DatabasePool,
+): Promise<Readonly<DBChatMessage[]>> {
+    const { chatID } = params;
+
+    const messages = await pool.any(sql.type(DBChatMessageSchema)`
+        SELECT *
+        FROM "ChatMessage"
+        WHERE "chatID" = ${chatID}
+        ORDER BY id DESC
+    `);
+
+    return messages;
+}
+
+type MaybeSetChatPreviewParams = {
+    chatID: string;
+    message: string;
+};
+export async function maybeSetChatPreview(
+    params: MaybeSetChatPreviewParams,
+    pool: DatabasePool,
+): Promise<void> {
+    const { chatID, message } = params;
+
+    await pool.any(sql.type(DBChatSchema)`
+        UPDATE "Chat"
+        SET "previewName" = ${message}
+        WHERE id = ${chatID}
+        AND "previewName" IS NULL;
+    `);
 }

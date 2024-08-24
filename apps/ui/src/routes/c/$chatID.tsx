@@ -263,7 +263,7 @@ function Chat() {
             >
                 <div
                     ref={chatMessagesRef}
-                    className="w-full max-w-4xl flex-grow flex items-center overflow-y-scroll mb-24"
+                    className="w-full max-w-4xl flex-grow flex items-center overflow-y-scroll mb-20"
                 >
                     <div className="h-2" />
                     {currentlyStreamingMessage && isFull && (
@@ -279,7 +279,7 @@ function Chat() {
                     )}
                 </div>
             </div>
-            <div className="fixed bottom-0 self-center w-full max-w-4xl rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-hidden pb-2">
+            <div className="fixed bottom-0 min-h-20 max-h-[40rem] self-center w-full max-w-4xl rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-y-scroll pb-2">
                 <InputBox
                     handleSubmit={handleSubmit}
                     placeholderText="Reply to Charlie..."
