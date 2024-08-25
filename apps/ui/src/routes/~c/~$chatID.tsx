@@ -1,5 +1,4 @@
 import InputBox from '@/components/InputBox';
-import Message, { AssistantMessage } from '@/components/ui/chat/message';
 import { queryClient } from '@/lib/reactQuery';
 import { type TRPCOutputs, trpc, trpcQueryUtils } from '@/lib/trpc';
 import type { AsyncGeneratorYieldType } from '@/lib/utils';
@@ -11,6 +10,8 @@ import {
 import { getQueryKey } from '@trpc/react-query';
 import { DateTime } from 'luxon';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import ChatContainer from './components/chatContainer';
+import Message, { AssistantMessage } from './components/message';
 
 type InfiniteQueryData = {
     pages: TRPCOutputs['chatMessages']['infiniteList'][];
@@ -51,27 +52,6 @@ function Chat() {
         from: '/c/$chatID',
     });
 
-    const messagesInfiniteQuery =
-        trpc.chatMessages.infiniteList.useInfiniteQuery(
-            {
-                chatID,
-                limit: 10,
-            },
-            {
-                getNextPageParam: (lastPage) => lastPage.nextCursor,
-            },
-        );
-
-    const messages = messagesInfiniteQuery.data
-        ? messagesInfiniteQuery.data.pages.flatMap((page) =>
-              page.items.map((item) => ({
-                  ...item,
-                  createdAt: DateTime.fromISO(item.createdAt).toJSDate(),
-                  updatedAt: DateTime.fromISO(item.updatedAt).toJSDate(),
-              })),
-          )
-        : [];
-
     const infiniteMessagesQueryKey = getQueryKey(
         trpc.chatMessages.infiniteList,
         {
@@ -108,9 +88,14 @@ function Chat() {
     };
 
     const processMessageChunk = async (
-        chunk: AsyncGeneratorYieldType<TRPCOutputs['chatMessages']['send']>,
+        chunk:
+            | AsyncGeneratorYieldType<TRPCOutputs['chatMessages']['send']>
+            | AsyncGeneratorYieldType<TRPCOutputs['chat']['create']>,
     ): Promise<void> => {
-        if (chunk.type === 'userMessage') {
+        if (chunk.type === 'chat') {
+            // WTF
+            return;
+        } else if (chunk.type === 'userMessage') {
             queryClient.setQueryData(
                 infiniteMessagesQueryKey,
                 (prevData: InfiniteQueryData) => {
@@ -173,38 +158,6 @@ function Chat() {
         string | null
     >(null);
 
-    // We keep a ref to the chat and the bottom of the message
-    const chatContainerRef = useRef<HTMLDivElement>(null);
-    const chatMessagesRef = useRef<HTMLDivElement>(null);
-    const [isFull, setIsFull] = useState(false);
-
-    // biome-ignore lint/correctness/useExhaustiveDependencies: It's fine
-    useLayoutEffect(() => {
-        // If the entire screen is filled out, then we want to start rendering messages
-        // from the bottom, like the chat is getting pushed upwards each new message.
-        // We do it in a layout effect to apply changes before the DOM gets painted,
-        // allowing for smoother animation.
-
-        const checkContentFillsScreen = () => {
-            if (chatContainerRef.current && chatMessagesRef.current) {
-                const containerHeight = chatContainerRef.current.clientHeight;
-                const contentHeight = chatMessagesRef.current.scrollHeight;
-                return contentHeight > containerHeight;
-            }
-            return false;
-        };
-
-        if (chatMessagesRef.current) {
-            if (checkContentFillsScreen()) {
-                chatMessagesRef.current.style.flexDirection = 'column-reverse';
-                setIsFull(true);
-            } else {
-                chatMessagesRef.current.style.flexDirection = 'column';
-                setIsFull(false);
-            }
-        }
-    }, [messages, currentlyStreamingMessage]);
-
     // If it was passed an initialMessage then it means we have a message to immediately
     // start rendering
     // biome-ignore lint/correctness/useExhaustiveDependencies: It's fine
@@ -257,28 +210,10 @@ function Chat() {
 
     return (
         <div className="w-full h-full flex flex-col">
-            <div
-                ref={chatContainerRef}
-                className="w-full h-full flex flex-col items-center"
-            >
-                <div
-                    ref={chatMessagesRef}
-                    className="w-full max-w-4xl flex-grow flex items-center overflow-y-scroll mb-20"
-                >
-                    <div className="h-2" />
-                    {currentlyStreamingMessage && isFull && (
-                        <AssistantMessage message={currentlyStreamingMessage} />
-                    )}
-                    {(isFull ? messages : messages.slice().reverse()).map(
-                        (m) => (
-                            <Message key={m.id} message={m} />
-                        ),
-                    )}
-                    {currentlyStreamingMessage && !isFull && (
-                        <AssistantMessage message={currentlyStreamingMessage} />
-                    )}
-                </div>
-            </div>
+            <ChatContainer
+                chatID={chatID}
+                currentlyStreamingMessage={currentlyStreamingMessage}
+            />
             <div className="fixed bottom-0 min-h-20 max-h-[40rem] self-center w-full max-w-4xl rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-y-scroll pb-2">
                 <InputBox
                     handleSubmit={handleSubmit}

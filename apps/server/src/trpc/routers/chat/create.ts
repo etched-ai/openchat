@@ -1,19 +1,33 @@
-// Creates a new empty chat in the DB. Must call this before sending any messages, even from the home
-// page.
+// Creates a DB chat and streams down the response. Chats can only be created from the home page.
 
 import { type DBChat, type DBChatMessage, DBChatSchema } from '@repo/db';
 import { sql } from 'slonik';
 import { ulid } from 'ulid';
 import { z } from 'zod';
 import { publicProcedure } from '../../trpc';
-import { upsertDBChatMessage } from '../chatMessages/send';
+import {
+    type SendMessageOutput,
+    updateDBChatMessage,
+    upsertDBChatMessage,
+} from '../chatMessages/send';
 
 export const CreateChatSchema = z.object({
     initialMessage: z.string().optional(),
 });
+
+type CreateChatOutput =
+    | {
+          type: 'chat';
+          chat: DBChat;
+      }
+    | SendMessageOutput;
+
 export const create = publicProcedure
     .input(CreateChatSchema)
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async function* ({
+        input,
+        ctx,
+    }): AsyncGenerator<CreateChatOutput> {
         const chatID = ulid();
 
         const newChat = (await ctx.dbPool.one(sql.type(DBChatSchema)`
@@ -40,14 +54,58 @@ export const create = publicProcedure
                     chatID,
                     messageContent: input.initialMessage,
                     messageType: 'user',
-                    responseStatus: 'not_started',
+                    responseStatus: 'streaming',
                 },
                 ctx.dbPool,
             );
             messages.push(initialMessage);
         }
-        return {
-            ...newChat,
-            messages,
+
+        yield {
+            type: 'chat',
+            chat: newChat,
         };
+
+        if (!input.initialMessage) return;
+
+        const chatIterator = ctx.chatService.generateResponse({
+            userID: ctx.user.id,
+            chatID,
+            message: input.initialMessage,
+            previousMessages: [],
+        });
+
+        let fullMessage = '';
+        let messageID = '';
+        for await (const chunk of chatIterator) {
+            yield {
+                type: 'messageChunk',
+                messageChunk: chunk,
+            };
+            messageID = chunk.id;
+            fullMessage += chunk.messageContent;
+        }
+
+        const completedAssistantMessage = await upsertDBChatMessage(
+            {
+                id: messageID,
+                userID: ctx.user.id,
+                chatID: chatID,
+                messageType: 'assistant',
+                messageContent: fullMessage,
+            },
+            ctx.dbPool,
+        );
+        yield {
+            type: 'completeMessage',
+            message: completedAssistantMessage,
+        };
+
+        await updateDBChatMessage(
+            {
+                messageID: messageID,
+                responseStatus: 'done',
+            },
+            ctx.dbPool,
+        );
     });

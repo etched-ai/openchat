@@ -17,9 +17,8 @@ export const SendMessageSchema = z.object({
     message: z.string(),
     customSystemPrompt: z.string().optional(),
     chatID: z.string(),
-    generateResponse: z.boolean().default(true),
 });
-type SendMessageOutput =
+export type SendMessageOutput =
     | {
           type: 'userMessage';
           message: DBChatMessage;
@@ -60,11 +59,6 @@ export const send = publicProcedure
             { chatID: input.chatID, message: input.message },
             ctx.dbPool,
         );
-
-        if (!input.generateResponse) {
-            // Done
-            return;
-        }
 
         let messageID = ulid();
         await updateDBChatMessage(

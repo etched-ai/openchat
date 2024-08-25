@@ -29,7 +29,7 @@ import { useState } from 'react';
 
 type RouterContext = {
     initialChatStream: ReadableStream<
-        AsyncGeneratorYieldType<TRPCOutputs['chatMessages']['generateResponse']>
+        AsyncGeneratorYieldType<TRPCOutputs['chat']['create']>
     > | null;
     session: Session | null;
 };
