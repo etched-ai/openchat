@@ -21,8 +21,8 @@ export const Route = createLazyFileRoute('/')({
 function maybeGetName(session: Session | null): null | string {
     if (!session) return null;
     const name =
-        session.user.identities?.[0].identity_data?.full_name ||
-        session.user.identities?.[0].identity_data?.full_name;
+        session.user.identities?.[0]?.identity_data?.full_name ||
+        session.user.identities?.[0]?.identity_data?.full_name;
     if (!name) return null;
     const nameParts = name.split(' ');
     if (nameParts.length === 1) {
