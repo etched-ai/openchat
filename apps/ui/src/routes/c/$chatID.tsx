@@ -108,9 +108,14 @@ function Chat() {
     };
 
     const processMessageChunk = async (
-        chunk: AsyncGeneratorYieldType<TRPCOutputs['chatMessages']['send']>,
+        chunk:
+            | AsyncGeneratorYieldType<TRPCOutputs['chatMessages']['send']>
+            | AsyncGeneratorYieldType<TRPCOutputs['chat']['create']>,
     ): Promise<void> => {
-        if (chunk.type === 'userMessage') {
+        if (chunk.type === 'chat') {
+            // WTF
+            return;
+        } else if (chunk.type === 'userMessage') {
             queryClient.setQueryData(
                 infiniteMessagesQueryKey,
                 (prevData: InfiniteQueryData) => {

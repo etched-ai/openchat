@@ -39,8 +39,6 @@ function Index() {
     const [pendingSubmitChatMessage, startSubmitChatMessageTransition] =
         useTransition();
     const createChatMutation = trpc.chat.create.useMutation();
-    const generateResponseMutation =
-        trpc.chatMessages.generateResponse.useMutation();
 
     const getGreeting = () => {
         const hour = DateTime.local().hour;
@@ -56,30 +54,34 @@ function Index() {
     const handleSubmit = (text: string): void =>
         startSubmitChatMessageTransition(async () => {
             // Create the chat and send the first message
-            const createChatResp = await createChatMutation.mutateAsync({
+            const createChatGenerator = await createChatMutation.mutateAsync({
                 initialMessage: text,
             });
             await queryClient.invalidateQueries({
                 queryKey: getQueryKey(trpc.chat.infiniteList, undefined, 'any'),
             });
-            const generateResponseResp =
-                await generateResponseMutation.mutateAsync({
-                    messageID: createChatResp.messages[0].id,
-                });
 
             // Convert the async generator into a readable stream
             const stream = new ReadableStream<
-                AsyncGeneratorYieldType<
-                    TRPCOutputs['chatMessages']['generateResponse']
-                >
+                AsyncGeneratorYieldType<TRPCOutputs['chat']['create']>
             >({
                 async start(controller) {
-                    for await (const chunk of generateResponseResp) {
+                    for await (const chunk of createChatGenerator) {
                         controller.enqueue(chunk);
                     }
                     controller.close();
                 },
             });
+
+            // Get the first value from the stream which should be a chat
+            const reader = stream.getReader();
+            const { done, value: chunk } = await reader.read();
+            reader.releaseLock();
+            if (chunk?.type !== 'chat') {
+                // TODO: handle error
+                console.error('FIRST VALUE NOT CHAT??');
+                return;
+            }
 
             // Now the stream gets passed into the router context so you can just keep
             // reading from it without worrying about resetting it
@@ -89,7 +91,7 @@ function Index() {
                 from: '/',
                 to: '/c/$chatID',
                 params: {
-                    chatID: createChatResp.id,
+                    chatID: chunk.chat.id,
                 },
             });
         });

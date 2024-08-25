@@ -19,7 +19,7 @@ export const SendMessageSchema = z.object({
     chatID: z.string(),
     generateResponse: z.boolean().default(true),
 });
-type SendMessageOutput =
+export type SendMessageOutput =
     | {
           type: 'userMessage';
           message: DBChatMessage;
