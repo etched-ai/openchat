@@ -7,6 +7,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import UserIcon from '@/components/ui/userIcon';
+import * as KeyboardListener from '@/lib/keyboardListener';
 import { supabase } from '@/lib/supabase';
 import {
     type TRPCOutputs,
@@ -21,11 +22,12 @@ import {
     Outlet,
     createRootRouteWithContext,
     redirect,
+    useNavigate,
 } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { ChevronLeft, ChevronRight, SquarePlus } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type RouterContext = {
     initialChatStream: ReadableStream<
@@ -75,6 +77,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function ChatWrapper() {
     const { session } = Route.useRouteContext();
+    const navigate = useNavigate();
 
     const chatsQuery = trpc.chat.infiniteList.useQuery({
         limit: 10,
@@ -89,6 +92,26 @@ function ChatWrapper() {
 
     const [sidebarIsOpen, setSidebarIsOpen] = useState(false);
     const toggleSidebarOpen = () => setSidebarIsOpen((prev) => !prev);
+
+    useEffect(() => {
+        const toggleSidebarCmdId = KeyboardListener.registerCommand(
+            { key: 'b', metaKey: true },
+            () => {
+                setSidebarIsOpen((prev) => !prev);
+            },
+        );
+        const newChatCmdId = KeyboardListener.registerCommand(
+            { key: 'k', metaKey: true },
+            () => navigate({ to: '/' }),
+        );
+        KeyboardListener.init();
+
+        return () => {
+            KeyboardListener.unregisterCommand(toggleSidebarCmdId);
+            KeyboardListener.unregisterCommand(newChatCmdId);
+            KeyboardListener.cleanup();
+        };
+    }, [navigate]);
 
     return (
         <>
@@ -111,7 +134,7 @@ function ChatWrapper() {
                             </Link>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>New Chat</p>
+                            <p>New Chat (⌘+k)</p>
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
@@ -128,11 +151,20 @@ function ChatWrapper() {
                         <div className="p-4">
                             {/* Placeholder for logo */}
                             <div className="h-8" />
-                            <Link to="/">
-                                <Button className="mb-4">
-                                    <p>New Chat</p>
-                                </Button>
-                            </Link>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Link to="/">
+                                            <Button className="mb-4">
+                                                <p>New Chat</p>
+                                            </Button>
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <span>⌘+k</span>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                             <h3 className="text-2xl font-bold mb-4 w-64">
                                 Chat History
                             </h3>
@@ -157,23 +189,34 @@ function ChatWrapper() {
                         </div>
                     )}
                 </div>
-                <Button
-                    variant="ghost"
-                    size="default"
-                    className={`fixed top-1/2 -translate-y-1/2 transition-all duration-200 ease-in-out px-2 py-2 ${
-                        sidebarIsOpen ? 'left-[16.5rem]' : 'left-2'
-                    }`}
-                    onClick={toggleSidebarOpen}
-                    aria-label={
-                        sidebarIsOpen ? 'Close sidebar' : 'Open sidebar'
-                    }
-                >
-                    {sidebarIsOpen ? (
-                        <ChevronLeft className="h-4 w-4" />
-                    ) : (
-                        <ChevronRight className="h-4 w-4" />
-                    )}
-                </Button>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="default"
+                                className={`fixed top-1/2 -translate-y-1/2 transition-all duration-200 ease-in-out px-2 py-2 ${
+                                    sidebarIsOpen ? 'left-[16.5rem]' : 'left-2'
+                                }`}
+                                onClick={toggleSidebarOpen}
+                                aria-label={
+                                    sidebarIsOpen
+                                        ? 'Close sidebar'
+                                        : 'Open sidebar'
+                                }
+                            >
+                                {sidebarIsOpen ? (
+                                    <ChevronLeft className="h-4 w-4" />
+                                ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                )}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <span>⌘+b</span>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
                 <div className="flex flex-1">
                     <Outlet />
                 </div>

@@ -151,6 +151,16 @@ function Chat() {
             queryClient.invalidateQueries({
                 queryKey: infiniteMessagesQueryKey,
             });
+            const chatListQueryKey = getQueryKey(
+                trpc.chat.infiniteList,
+                {
+                    limit: 10,
+                },
+                'any',
+            );
+            queryClient.invalidateQueries({
+                queryKey: chatListQueryKey,
+            });
         },
     });
 
