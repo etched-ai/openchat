@@ -15,20 +15,21 @@ type Props = {
     placeholderText: string;
 };
 export const MilkdownEditor: React.FC<Props> = ({ placeholderText }) => {
-    const { get } = useEditor((root) =>
-        Editor.make()
-            .config(nord)
-            .config((ctx) => {
-                ctx.set(rootCtx, root);
-                ctx.set(defaultValueCtx, '');
-                ctx.set(placeholderCtx, placeholderText);
-            })
-            .use(listener)
-            .use(commonmark)
-            .use(gfm)
-            .use(history)
-            .use(placeholder)
-            .use([headerSyntaxPlugin, codeBlockSyntaxPlugin, inlineCodePlugin]),
+    const { get } = useEditor(
+        (root) =>
+            Editor.make()
+                .config(nord)
+                .config((ctx) => {
+                    ctx.set(rootCtx, root);
+                    ctx.set(defaultValueCtx, '');
+                    ctx.set(placeholderCtx, placeholderText);
+                })
+                .use(listener)
+                .use(commonmark)
+                .use(gfm)
+                .use(history)
+                .use(placeholder),
+        // .use([headerSyntaxPlugin, codeBlockSyntaxPlugin, inlineCodePlugin]),
     );
 
     return (
