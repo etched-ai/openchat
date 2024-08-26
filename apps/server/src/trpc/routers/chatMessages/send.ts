@@ -1,13 +1,7 @@
 // This procedure creates a user message and optionally streams down an assistant
 // message.
 
-import {
-    DBChat,
-    type DBChatMessage,
-    DBChatMessageSchema,
-    DBChatSchema,
-} from '@repo/db';
-import { DateTime } from 'luxon';
+import { type DBChatMessage, DBChatMessageSchema } from '@repo/db';
 import { type DatabasePool, sql } from 'slonik';
 import { ulid } from 'ulid';
 import { z } from 'zod';
@@ -54,11 +48,6 @@ export const send = publicProcedure
             type: 'userMessage',
             message: newUserMessage,
         };
-
-        await maybeSetChatPreview(
-            { chatID: input.chatID, message: input.message },
-            ctx.dbPool,
-        );
 
         let messageID = ulid();
         await updateDBChatMessage(
@@ -229,22 +218,4 @@ export async function getPreviousChatMessages(
     `);
 
     return messages;
-}
-
-type MaybeSetChatPreviewParams = {
-    chatID: string;
-    message: string;
-};
-export async function maybeSetChatPreview(
-    params: MaybeSetChatPreviewParams,
-    pool: DatabasePool,
-): Promise<void> {
-    const { chatID, message } = params;
-
-    await pool.any(sql.type(DBChatSchema)`
-        UPDATE "Chat"
-        SET "previewName" = ${message}
-        WHERE id = ${chatID}
-        AND "previewName" IS NULL;
-    `);
 }

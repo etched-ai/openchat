@@ -96,7 +96,9 @@ function ChatWrapper() {
     useEffect(() => {
         const toggleSidebarCmdId = KeyboardListener.registerCommand(
             { key: 'b', metaKey: true },
-            () => setSidebarIsOpen((prev) => !prev),
+            () => {
+                setSidebarIsOpen((prev) => !prev);
+            },
         );
         const newChatCmdId = KeyboardListener.registerCommand(
             { key: 'k', metaKey: true },
@@ -104,7 +106,7 @@ function ChatWrapper() {
         );
         KeyboardListener.init();
 
-        () => {
+        return () => {
             KeyboardListener.unregisterCommand(toggleSidebarCmdId);
             KeyboardListener.unregisterCommand(newChatCmdId);
             KeyboardListener.cleanup();
@@ -149,11 +151,20 @@ function ChatWrapper() {
                         <div className="p-4">
                             {/* Placeholder for logo */}
                             <div className="h-8" />
-                            <Link to="/">
-                                <Button className="mb-4">
-                                    <p>New Chat</p>
-                                </Button>
-                            </Link>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Link to="/">
+                                            <Button className="mb-4">
+                                                <p>New Chat</p>
+                                            </Button>
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <span>⌘+k</span>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                             <h3 className="text-2xl font-bold mb-4 w-64">
                                 Chat History
                             </h3>
