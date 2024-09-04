@@ -56,7 +56,7 @@ type MarkdownRendererProps = {
 };
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
     return (
-        <div className="milkdown w-full">
+        <div className="markdown-container w-full">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         </div>
     );
