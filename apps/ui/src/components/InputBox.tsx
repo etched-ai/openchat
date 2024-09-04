@@ -1,12 +1,10 @@
-import { editorView, editorViewCtx } from '@milkdown/core';
-import type { Ctx } from '@milkdown/ctx';
-import { TextSelection } from '@milkdown/prose/state';
-import { MilkdownProvider, useInstance } from '@milkdown/react';
-import { getMarkdown } from '@milkdown/utils';
-import { ArrowUp } from 'lucide-react';
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
-import { MilkdownEditor } from './Milkdown/Milkdown';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { ArrowUp } from 'lucide-react';
+import CodeMirrorEditor, {
+    type CodemirrorEditorRef,
+} from './Codemirror/Codemirror';
 import { Button } from './ui/button';
 
 type InputBoxProps = {
@@ -14,109 +12,41 @@ type InputBoxProps = {
     placeholderText: string;
 };
 
-const InputBox: React.FC<InputBoxProps> = (props) => {
-    return (
-        <MilkdownProvider>
-            <InputBoxInner {...props} />
-        </MilkdownProvider>
-    );
-};
-
-const InputBoxInner: React.FC<InputBoxProps> = ({
+const InputBox: React.FC<InputBoxProps> = ({
     handleSubmit,
     placeholderText,
 }) => {
-    const [loading, getEditor] = useInstance();
-    const editorAction = useCallback(
-        (fn: (ctx: Ctx) => void) => {
-            if (loading) return null;
-            return getEditor().action(fn);
-        },
-        [loading, getEditor],
-    );
     const [inputContent, setInputContent] = useState('');
-
-    const _handleSubmit = useCallback((): void => {
-        editorAction((ctx) => {
-            const md = getMarkdown()(ctx);
-            handleSubmit(md);
-
-            const view = ctx.get(editorViewCtx);
-            const { tr } = view.state;
-            tr.delete(0, view.state.doc.content.size);
-            view.dispatch(tr);
-
-            setInputContent('');
-        });
-    }, [handleSubmit, editorAction]);
-
-    useEffect(() => {
-        let cleanup: (() => void) | undefined;
-
-        const setupEditor = () => {
-            const handleContentUpdated = () =>
-                editorAction((ctx) => {
-                    const md = getMarkdown()(ctx);
-                    setInputContent(md);
-                });
-
-            const handleKeyUp = (e: KeyboardEvent) => {
-                handleContentUpdated();
-            };
-            const handleKeyDown = (e: KeyboardEvent) => {
-                if (
-                    e.key === 'Enter' &&
-                    !e.shiftKey &&
-                    !e.ctrlKey &&
-                    !e.altKey &&
-                    !e.metaKey
-                ) {
-                    e.preventDefault();
-                    _handleSubmit();
-                }
-            };
-
-            editorAction((ctx) => {
-                const view = ctx.get(editorViewCtx);
-                view.dom.addEventListener('keydown', handleKeyDown);
-                view.dom.addEventListener('keyup', handleKeyUp);
-                cleanup = () => {
-                    view.dom.removeEventListener('keydown', handleKeyDown);
-                    view.dom.removeEventListener('keyup', handleKeyUp);
-                };
-            });
-
-            handleContentUpdated();
-        };
-
-        if (!loading) {
-            setupEditor();
-        }
-
-        return () => {
-            if (cleanup) {
-                cleanup();
-            }
-        };
-    }, [loading, editorAction, _handleSubmit]);
+    const editorRef = useRef<CodemirrorEditorRef>(null);
 
     const focusOnEditor = useCallback(() => {
-        editorAction((ctx) => {
-            const view = ctx.get(editorViewCtx);
-            const { state } = view;
-            if (!state.selection) {
-                const selection = TextSelection.create(state.doc, 1);
-                view.focus();
-                view.dispatch(state.tr.setSelection(selection));
-            } else {
-                view.focus();
-            }
-        });
-    }, [editorAction]);
+        editorRef.current?.focus();
+    }, []);
 
     useEffect(() => {
         focusOnEditor();
     }, [focusOnEditor]);
+
+    useEffect(() => {
+        const _handleSubmit = (e: KeyboardEvent) => {
+            if (
+                e.key === 'Enter' &&
+                !e.shiftKey &&
+                !e.metaKey &&
+                !e.ctrlKey &&
+                !e.altKey
+            ) {
+                e.preventDefault();
+                handleSubmit(inputContent);
+            }
+        };
+
+        document.addEventListener('keydown', _handleSubmit);
+
+        return () => {
+            document.removeEventListener('keydown', _handleSubmit);
+        };
+    }, [inputContent, handleSubmit]);
 
     return (
         // biome-ignore lint/a11y/useKeyWithClickEvents: This is technically a text input
@@ -124,10 +54,15 @@ const InputBoxInner: React.FC<InputBoxProps> = ({
             className="flex items-start w-full h-full overflow-y-scroll bg-muted p-2"
             onClick={() => focusOnEditor()}
         >
-            <MilkdownEditor placeholderText={placeholderText} />
+            <CodeMirrorEditor
+                ref={editorRef}
+                initialValue=""
+                placeholderText={placeholderText}
+                onChange={setInputContent}
+            />
             <div className="w-8 relative">
                 <SubmitButton
-                    onSubmit={_handleSubmit}
+                    onSubmit={() => handleSubmit(inputContent)}
                     show={inputContent.length > 0}
                 />
             </div>
