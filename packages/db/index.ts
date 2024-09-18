@@ -14,18 +14,15 @@ const BaseDBChatMessageSchema = z.object({
     userID: z.string().uuid(),
     chatID: z.string().ulid(),
     messageContent: z.string(),
+    status: z.enum(['streaming', 'done', 'canceled']),
     createdAt: z.date(),
     updatedAt: z.date(),
 });
 const UserMessageSchema = BaseDBChatMessageSchema.extend({
     messageType: z.literal('user'),
-    responseStatus: z.enum(['not_started', 'streaming', 'done', 'canceled']),
-    responseMessageID: z.string().ulid().optional(),
 });
 const AssistantMessageSchema = BaseDBChatMessageSchema.extend({
     messageType: z.literal('assistant'),
-    responseStatus: z.undefined(),
-    responseMessageID: z.undefined(),
 });
 export const DBChatMessageSchema = z.discriminatedUnion('messageType', [
     UserMessageSchema,

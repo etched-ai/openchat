@@ -43,6 +43,7 @@ export default class ChatService implements IChatService {
                 chatID: input.chatID,
                 messageType: 'assistant',
                 messageContent: chunk.choices[0]?.delta.content || '',
+                status: 'streaming',
                 createdAt: DateTime.now().toJSDate(),
                 updatedAt: DateTime.now().toJSDate(),
             } satisfies DBChatMessage;
