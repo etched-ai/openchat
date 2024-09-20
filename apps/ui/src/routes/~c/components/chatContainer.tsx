@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 
 import { trpc } from '@/lib/trpc';
 import { DateTime } from 'luxon';
-import Message from './message';
+import Message, { AssistantMessage } from './message';
 
 type Props = {
     chatID: string;
@@ -35,7 +35,7 @@ const ChatContainer: React.FC<Props> = ({ chatID }) => {
     const chatMessagesRef = useRef<HTMLDivElement>(null);
     const [isFull, setIsFull] = useState(false);
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: Needs to trigger on message update
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Needs to trigger on every message update
     useLayoutEffect(() => {
         // If the entire screen is filled out, then we want to start rendering messages
         // from the bottom, like the chat is getting pushed upwards each new message.

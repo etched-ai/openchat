@@ -112,6 +112,9 @@ function Chat() {
         },
     });
 
+    // TEMP: To trigger rerenders until I figure out how to do this better
+    const [, setCurrentlyStreamingMessage] = useState<string>('');
+
     trpc.chat.listenNewMessages.useSubscription(
         {
             chatID,
@@ -119,6 +122,7 @@ function Chat() {
         },
         {
             onData: (data) => {
+                // TODO: Shouldn't rerender the entire list on every update
                 queryClient.setQueryData(
                     infiniteMessagesQueryKey,
                     (prevData: InfiniteQueryData) => {
@@ -131,8 +135,12 @@ function Chat() {
                             if (data.status === 'streaming') {
                                 messageToUpdate.messageContent +=
                                     data.messageContent;
+                                setCurrentlyStreamingMessage(
+                                    messageToUpdate.messageContent,
+                                );
                             } else {
                                 messageToUpdate = data;
+                                setCurrentlyStreamingMessage('');
                             }
                         }
                         return getNewPageData(prevData, messageToUpdate);

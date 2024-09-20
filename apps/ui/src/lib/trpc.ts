@@ -1,5 +1,11 @@
 import type { AppRouter } from '@repo/server/src/trpc/router';
-import { createTRPCClient, unstable_httpBatchStreamLink } from '@trpc/client';
+import {
+    createTRPCClient,
+    httpBatchLink,
+    splitLink,
+    unstable_httpBatchStreamLink,
+    unstable_httpSubscriptionLink,
+} from '@trpc/client';
 import { createTRPCQueryUtils, createTRPCReact } from '@trpc/react-query';
 import type { inferRouterOutputs } from '@trpc/server';
 import { queryClient } from './reactQuery';
@@ -19,13 +25,19 @@ export const trpc = createTRPCReact<AppRouter>();
 
 export const trpcClient = trpc.createClient({
     links: [
-        unstable_httpBatchStreamLink({
-            url: `${API_BASE_URL}/trpc`,
-            headers() {
-                return {
-                    authorization: `Bearer ${token}`,
-                };
-            },
+        splitLink({
+            condition: (op) => op.type === 'subscription',
+            true: unstable_httpSubscriptionLink({
+                url: `${API_BASE_URL}/trpc`,
+            }),
+            false: httpBatchLink({
+                url: `${API_BASE_URL}/trpc`,
+                headers() {
+                    return {
+                        authorization: `Bearer ${token}`,
+                    };
+                },
+            }),
         }),
     ],
 });

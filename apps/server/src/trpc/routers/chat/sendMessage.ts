@@ -61,6 +61,7 @@ export async function generateAssistantMessage(
     for await (const chunk of chatIterator) {
         messageID = chunk.id;
         fullMessage += chunk.messageContent;
+        console.log('GOT CHUNK', chunk);
 
         await upsertDBChatMessage(
             {
@@ -69,6 +70,7 @@ export async function generateAssistantMessage(
             },
             ctx.dbPool,
         );
+        console.log('UPSERTED');
 
         await redis.publish(
             subscriptionChannels.chatMessages(input.chatID),
@@ -77,6 +79,7 @@ export async function generateAssistantMessage(
                 message: chunk,
             }),
         );
+        console.log('PUBLISHED');
     }
 
     const completedAssistantMessage = await upsertDBChatMessage(

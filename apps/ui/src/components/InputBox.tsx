@@ -38,6 +38,7 @@ const InputBox: React.FC<InputBoxProps> = ({
             ) {
                 e.preventDefault();
                 handleSubmit(inputContent);
+                editorRef.current?.clear();
             }
         };
 

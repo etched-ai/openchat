@@ -45,11 +45,13 @@ server.addHook('onRequest', async (req, reply) => {
         const { data, error } = await supabase.auth.getUser(authToken);
 
         if (error) {
+            console.error('[AUTH ERROR]:', error);
             reply.code(401).send({ error: 'Invalid token.' });
             return reply;
         }
 
         if (!data.user) {
+            console.error('[ERROR]: NO USER FOUND');
             reply.code(401).send({ error: 'User not found.' });
             return reply;
         }

@@ -15,7 +15,6 @@ export async function upsertDBChatMessage(
                 "messageType",
                 "messageContent",
                 "status",
-                "responseMessageID",
                 "createdAt",
                 "updatedAt"
             ) VALUES (
@@ -33,8 +32,7 @@ export async function upsertDBChatMessage(
                 "chatID" = EXCLUDED."chatID",
                 "messageType" = EXCLUDED."messageType",
                 "messageContent" = EXCLUDED."messageContent",
-                "responseStatus" = EXCLUDED."responseStatus",
-                "responseMessageID" = EXCLUDED."responseMessageID",
+                "status" = EXCLUDED."status",
                 "updatedAt" = CURRENT_TIMESTAMP
             RETURNING *;
         `);

@@ -4,6 +4,7 @@ import {
     subscriptionChannels,
 } from '@/utils/redis';
 import { type DBChatMessage, DBChatMessageSchema } from '@repo/db';
+import { tracked } from '@trpc/server';
 import { type DatabasePool, sql } from 'slonik';
 import { z } from 'zod';
 import { publicProcedure } from '../../trpc';
@@ -37,6 +38,7 @@ export const listenNewMessages = publicProcedure
                 redisSubscriber,
             )) {
                 yield message;
+                // yield tracked(message.id, message);
             }
         } finally {
             await redisSubscriber.unsubscribe(channelName);
@@ -52,8 +54,9 @@ async function* createRedisMessageGenerator(
             subClient.once('message', (_, message) => {
                 // We should only be subscribed to one channel
                 resolve(
-                    subscriptionChannelTypes.chatMessages.parse(message)
-                        .message,
+                    subscriptionChannelTypes.chatMessages.parse(
+                        JSON.parse(message),
+                    ).message,
                 );
             });
             subClient.once('error', reject);

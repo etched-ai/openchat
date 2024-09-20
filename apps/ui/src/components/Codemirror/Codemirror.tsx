@@ -7,6 +7,7 @@ import { EditorView, keymap, placeholder } from '@codemirror/view';
 
 export interface CodemirrorEditorRef {
     focus: () => void;
+    clear: () => void;
 }
 
 type Props = {
@@ -24,6 +25,17 @@ const CodeMirrorEditor = forwardRef<CodemirrorEditorRef, Props>(
             focus: () => {
                 if (viewRef.current) {
                     return viewRef.current.focus();
+                }
+            },
+            clear: () => {
+                if (viewRef.current) {
+                    viewRef.current.dispatch({
+                        changes: {
+                            from: 0,
+                            to: viewRef.current.state.doc.length,
+                            insert: '',
+                        },
+                    });
                 }
             },
         }));
