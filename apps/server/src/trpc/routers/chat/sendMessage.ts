@@ -1,4 +1,5 @@
 import type { Context } from '@/trpc/context';
+import redis, { subscriptionChannels } from '@/utils/redis';
 import { getPreviousChatMessages, upsertDBChatMessage } from '@/utils/sql';
 import { ulid } from 'ulid';
 import { z } from 'zod';
@@ -10,7 +11,7 @@ export const SendMessageSchema = z.object({
     chatID: z.string(),
 });
 
-export const send = publicProcedure
+export const sendMessage = publicProcedure
     .input(SendMessageSchema)
     .mutation(async ({ input, ctx }) => {
         const newUserMessage = await upsertDBChatMessage(
@@ -57,12 +58,24 @@ export async function generateAssistantMessage(
 
     let fullMessage = '';
     for await (const chunk of chatIterator) {
-        // While the message is in the process of generating, we do not do database updates to it.
-        // No point slowing it down. If the user cancels the request in the middle it'll still be
-        // there locally so they can edit it. If they refresh the page its fine for a half-complete
-        // generation to just disappear as if it never happened.
         messageID = chunk.id;
         fullMessage += chunk.messageContent;
+
+        await upsertDBChatMessage(
+            {
+                ...chunk,
+                messageContent: fullMessage,
+            },
+            ctx.dbPool,
+        );
+
+        await redis.publish(
+            subscriptionChannels.chatMessages(input.chatID),
+            JSON.stringify({
+                type: 'chunk',
+                message: chunk,
+            }),
+        );
     }
 
     const completedAssistantMessage = await upsertDBChatMessage(
@@ -75,5 +88,13 @@ export async function generateAssistantMessage(
             status: 'done',
         },
         ctx.dbPool,
+    );
+
+    await redis.publish(
+        subscriptionChannels.chatMessages(input.chatID),
+        JSON.stringify({
+            type: 'completed',
+            message: completedAssistantMessage,
+        }),
     );
 }

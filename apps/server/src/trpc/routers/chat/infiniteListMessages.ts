@@ -6,7 +6,7 @@ import { sql } from 'slonik';
 import { z } from 'zod';
 import { publicProcedure } from '../../trpc';
 
-export const infiniteList = publicProcedure
+export const infiniteListMessages = publicProcedure
     .input(
         z.object({
             chatID: z.string().ulid(),
