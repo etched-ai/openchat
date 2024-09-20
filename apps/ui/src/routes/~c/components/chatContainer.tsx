@@ -3,18 +3,14 @@ import { useLayoutEffect, useRef, useState } from 'react';
 
 import { trpc } from '@/lib/trpc';
 import { DateTime } from 'luxon';
-import Message, { AssistantMessage } from './message';
+import Message from './message';
 
 type Props = {
     chatID: string;
-    currentlyStreamingMessage: string | null;
 };
-const ChatContainer: React.FC<Props> = ({
-    chatID,
-    currentlyStreamingMessage,
-}) => {
+const ChatContainer: React.FC<Props> = ({ chatID }) => {
     const messagesInfiniteQuery =
-        trpc.chatMessages.infiniteList.useInfiniteQuery(
+        trpc.chat.infiniteListMessages.useInfiniteQuery(
             {
                 chatID,
                 limit: 10,
@@ -39,7 +35,7 @@ const ChatContainer: React.FC<Props> = ({
     const chatMessagesRef = useRef<HTMLDivElement>(null);
     const [isFull, setIsFull] = useState(false);
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: It's fine
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Needs to trigger on message update
     useLayoutEffect(() => {
         // If the entire screen is filled out, then we want to start rendering messages
         // from the bottom, like the chat is getting pushed upwards each new message.
@@ -66,7 +62,7 @@ const ChatContainer: React.FC<Props> = ({
                 setIsFull(false);
             }
         }
-    }, [messages, currentlyStreamingMessage]);
+    }, [messages]);
 
     return (
         <div
@@ -78,12 +74,6 @@ const ChatContainer: React.FC<Props> = ({
                 className="w-full max-w-4xl flex-grow flex items-center overflow-y-scroll mb-20"
             >
                 <div className="h-2" />
-                {/* If the chat fills the screen then we're rendering in reverse order, so
-                for the currently streaming message to show on the bottom it needs to
-                be on the top in the code */}
-                {currentlyStreamingMessage && isFull && (
-                    <AssistantMessage message={currentlyStreamingMessage} />
-                )}
                 {/* If the chat fills the screen then we need to reverse the order of the
                 messages. However, the messages are *already* in reverse order since
                 the API returns them in latest message first. So we don't need to do
@@ -91,9 +81,6 @@ const ChatContainer: React.FC<Props> = ({
                 {(isFull ? messages : messages.slice().reverse()).map((m) => (
                     <Message key={m.id} message={m} />
                 ))}
-                {currentlyStreamingMessage && !isFull && (
-                    <AssistantMessage message={currentlyStreamingMessage} />
-                )}
             </div>
         </div>
     );

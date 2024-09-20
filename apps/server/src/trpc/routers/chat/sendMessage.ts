@@ -1,6 +1,7 @@
 import type { Context } from '@/trpc/context';
 import redis, { subscriptionChannels } from '@/utils/redis';
 import { getPreviousChatMessages, upsertDBChatMessage } from '@/utils/sql';
+import type { DBChatMessage } from '@repo/db';
 import { ulid } from 'ulid';
 import { z } from 'zod';
 import { publicProcedure } from '../../trpc';
@@ -14,7 +15,7 @@ export const SendMessageSchema = z.object({
 export const sendMessage = publicProcedure
     .input(SendMessageSchema)
     .mutation(async ({ input, ctx }) => {
-        const newUserMessage = await upsertDBChatMessage(
+        const newUserMessage: DBChatMessage = await upsertDBChatMessage(
             {
                 id: ulid(),
                 userID: ctx.user.id,

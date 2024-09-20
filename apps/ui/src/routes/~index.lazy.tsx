@@ -54,44 +54,18 @@ function Index() {
     const handleSubmit = (text: string): void =>
         startSubmitChatMessageTransition(async () => {
             // Create the chat and send the first message
-            const createChatGenerator = await createChatMutation.mutateAsync({
+            const newChat = await createChatMutation.mutateAsync({
                 initialMessage: text,
             });
             await queryClient.invalidateQueries({
                 queryKey: getQueryKey(trpc.chat.infiniteList, undefined, 'any'),
             });
 
-            // Convert the async generator into a readable stream
-            const stream = new ReadableStream<
-                AsyncGeneratorYieldType<TRPCOutputs['chat']['create']>
-            >({
-                async start(controller) {
-                    for await (const chunk of createChatGenerator) {
-                        controller.enqueue(chunk);
-                    }
-                    controller.close();
-                },
-            });
-
-            // Get the first value from the stream which should be a chat
-            const reader = stream.getReader();
-            const { done, value: chunk } = await reader.read();
-            reader.releaseLock();
-            if (chunk?.type !== 'chat') {
-                // TODO: handle error
-                console.error('FIRST VALUE NOT CHAT??');
-                return;
-            }
-
-            // Now the stream gets passed into the router context so you can just keep
-            // reading from it without worrying about resetting it
-
-            context.initialChatStream = stream;
             router.navigate({
                 from: '/',
                 to: '/c/$chatID',
                 params: {
-                    chatID: chunk.chat.id,
+                    chatID: newChat.id,
                 },
             });
         });

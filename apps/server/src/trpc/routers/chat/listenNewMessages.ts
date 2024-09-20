@@ -10,7 +10,7 @@ import { publicProcedure } from '../../trpc';
 
 export const ListenNewMessagesSchema = z.object({
     chatID: z.string(),
-    latestMessageSeenID: z.string().optional(),
+    latestSeenMessageID: z.string().optional(),
 });
 
 export const listenNewMessages = publicProcedure
@@ -18,10 +18,10 @@ export const listenNewMessages = publicProcedure
     .subscription(async function* ({ input, ctx }) {
         const channelName = subscriptionChannels.chatMessages(input.chatID);
 
-        if (input.latestMessageSeenID) {
+        if (input.latestSeenMessageID) {
             const messages = await getMessagesSinceLatestSeen(
                 input.chatID,
-                input.latestMessageSeenID,
+                input.latestSeenMessageID,
                 ctx.dbPool,
             );
             for (const message of messages) {
