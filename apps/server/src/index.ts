@@ -1,5 +1,6 @@
 import 'dotenv/config';
 
+import fastifyCookie from '@fastify/cookie';
 import fastifyCors from '@fastify/cors';
 import { fastifyRequestContext } from '@fastify/request-context';
 import type { User } from '@supabase/supabase-js';
@@ -8,9 +9,10 @@ import {
     fastifyTRPCPlugin,
 } from '@trpc/server/adapters/fastify';
 import fastify from 'fastify';
-import AIServiceSingletonPlugin from './fastifyPlugins/AIServiceSingletonPlugin';
-import ChatServicePlugin from './fastifyPlugins/ChatServicePlugin';
-import SlonikDBSingletonPlugin from './fastifyPlugins/SlonikDBSingletonPlugin';
+import { authCallbackHandler } from './fastify/handlers/authCallbackHandler';
+import AIServiceSingletonPlugin from './fastify/plugins/AIServiceSingletonPlugin';
+import ChatServicePlugin from './fastify/plugins/ChatServicePlugin';
+import SlonikDBSingletonPlugin from './fastify/plugins/SlonikDBSingletonPlugin';
 import { createContext } from './trpc/context';
 import { type AppRouter, appRouter } from './trpc/router';
 import { supabase } from './utils/supabase';
@@ -29,6 +31,7 @@ declare module '@fastify/request-context' {
 }
 server.register(fastifyRequestContext);
 server.addHook('onRequest', async (req, reply) => {
+    console.log(req);
     let authToken = req.headers.authorization;
     // It should always be in the form of `Bearer ${token}`
     if (typeof authToken !== 'string' || !authToken.startsWith('Bearer ')) {
@@ -73,6 +76,13 @@ server.register(fastifyCors, {
     credentials: true,
 });
 
+// Cookies
+server.register(fastifyCookie, {
+    secret: 'abc123',
+    hook: 'onRequest',
+    parseOptions: {},
+});
+
 // Add AI Service as a singleton across fastify
 server.register(AIServiceSingletonPlugin);
 
@@ -97,6 +107,9 @@ server.register(fastifyTRPCPlugin, {
     } satisfies FastifyTRPCPluginOptions<AppRouter>['trpcOptions'],
 });
 
+// Handlers
+authCallbackHandler(server);
+
 (async () => {
     try {
         console.info('[INFO]: Starting server...');
@@ -104,6 +117,7 @@ server.register(fastifyTRPCPlugin, {
         console.info(`[INFO]: Listening on port ${SERVER_PORT}`);
     } catch (err) {
         server.log.error(err);
+        console.error(err);
         process.exit(1);
     }
 })();

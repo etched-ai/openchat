@@ -76,6 +76,10 @@ function Index() {
         startLoginTransition(async () => {
             const { data, error } = await supabase.auth.linkIdentity({
                 provider: 'google',
+                options: {
+                    // TODO: change base URL to be dynamic
+                    redirectTo: 'http://localhost:5173/auth/callback',
+                },
             });
             if (error) {
                 console.error(error);
