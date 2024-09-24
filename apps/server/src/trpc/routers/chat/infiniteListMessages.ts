@@ -4,9 +4,9 @@ import { type DBChatMessage, DBChatMessageSchema } from '@repo/db';
 import { TRPCError } from '@trpc/server';
 import { sql } from 'slonik';
 import { z } from 'zod';
-import { publicProcedure } from '../../trpc';
+import { authedProcedure } from '../../trpc';
 
-export const infiniteListMessages = publicProcedure
+export const infiniteListMessages = authedProcedure
     .input(
         z.object({
             chatID: z.string().ulid(),

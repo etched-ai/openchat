@@ -14,7 +14,6 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import { Route as rootRoute } from "./routes/~__root"
 import { Route as CChatIDImport } from "./routes/~c/~$chatID"
-import { Route as AuthCallbackImport } from "./routes/~auth/~callback"
 
 // Create Virtual Routes
 
@@ -32,11 +31,6 @@ const CChatIDRoute = CChatIDImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthCallbackRoute = AuthCallbackImport.update({
-  path: "/auth/callback",
-  getParentRoute: () => rootRoute,
-} as any)
-
 // Populate the FileRoutesByPath interface
 
 declare module "@tanstack/react-router" {
@@ -46,13 +40,6 @@ declare module "@tanstack/react-router" {
       path: "/"
       fullPath: "/"
       preLoaderRoute: typeof IndexLazyImport
-      parentRoute: typeof rootRoute
-    }
-    "/auth/callback": {
-      id: "/auth/callback"
-      path: "/auth/callback"
-      fullPath: "/auth/callback"
-      preLoaderRoute: typeof AuthCallbackImport
       parentRoute: typeof rootRoute
     }
     "/c/$chatID": {
@@ -67,11 +54,7 @@ declare module "@tanstack/react-router" {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({
-  IndexLazyRoute,
-  AuthCallbackRoute,
-  CChatIDRoute,
-})
+export const routeTree = rootRoute.addChildren({ IndexLazyRoute, CChatIDRoute })
 
 /* prettier-ignore-end */
 
@@ -82,15 +65,11 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "~__root.tsx",
       "children": [
         "/",
-        "/auth/callback",
         "/c/$chatID"
       ]
     },
     "/": {
       "filePath": "~index.lazy.tsx"
-    },
-    "/auth/callback": {
-      "filePath": "~auth/~callback.tsx"
     },
     "/c/$chatID": {
       "filePath": "~c/~$chatID.tsx"

@@ -74,12 +74,9 @@ function Index() {
 
     const handleLogin = (): void =>
         startLoginTransition(async () => {
-            const { data, error } = await supabase.auth.linkIdentity({
+            // const { data, error } = await supabase.auth.linkIdentity({
+            const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
-                options: {
-                    // TODO: change base URL to be dynamic
-                    redirectTo: 'http://localhost:5173/auth/callback',
-                },
             });
             if (error) {
                 console.error(error);

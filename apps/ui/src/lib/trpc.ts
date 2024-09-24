@@ -29,13 +29,17 @@ export const trpcClient = trpc.createClient({
             condition: (op) => op.type === 'subscription',
             true: unstable_httpSubscriptionLink({
                 url: `${API_BASE_URL}/trpc`,
+                eventSourceOptions: {
+                    withCredentials: true,
+                },
             }),
             false: httpBatchLink({
                 url: `${API_BASE_URL}/trpc`,
-                headers() {
-                    return {
-                        authorization: `Bearer ${token}`,
-                    };
+                fetch(url, options) {
+                    return fetch(url, {
+                        ...options,
+                        credentials: 'include',
+                    });
                 },
             }),
         }),
@@ -45,17 +49,4 @@ export const trpcClient = trpc.createClient({
 export const trpcQueryUtils = createTRPCQueryUtils({
     queryClient,
     client: trpcClient,
-});
-
-export const vanillaTrpcClient = createTRPCClient({
-    links: [
-        unstable_httpBatchStreamLink({
-            url: `${API_BASE_URL}/trpc`,
-            headers() {
-                return {
-                    authorization: `Bearer ${token}`,
-                };
-            },
-        }),
-    ],
 });

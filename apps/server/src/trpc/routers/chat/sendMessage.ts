@@ -1,10 +1,10 @@
-import type { Context } from '@/trpc/context';
+import type { AuthedContext } from '@/trpc/context';
 import redis, { subscriptionChannels } from '@/utils/redis';
 import { getPreviousChatMessages, upsertDBChatMessage } from '@/utils/sql';
 import type { DBChatMessage } from '@repo/db';
 import { ulid } from 'ulid';
 import { z } from 'zod';
-import { publicProcedure } from '../../trpc';
+import { authedProcedure } from '../../trpc';
 
 export const SendMessageSchema = z.object({
     message: z.string(),
@@ -12,7 +12,7 @@ export const SendMessageSchema = z.object({
     chatID: z.string(),
 });
 
-export const sendMessage = publicProcedure
+export const sendMessage = authedProcedure
     .input(SendMessageSchema)
     .mutation(async ({ input, ctx }) => {
         const newUserMessage: DBChatMessage = await upsertDBChatMessage(
@@ -39,7 +39,7 @@ export const sendMessage = publicProcedure
 
 export async function generateAssistantMessage(
     input: z.infer<typeof SendMessageSchema>,
-    ctx: Context,
+    ctx: AuthedContext,
 ) {
     let messageID = ulid();
 

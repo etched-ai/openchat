@@ -6,14 +6,14 @@ import { type DBChat, type DBChatMessage, DBChatSchema } from '@repo/db';
 import { type DatabasePool, sql } from 'slonik';
 import { ulid } from 'ulid';
 import { z } from 'zod';
-import { publicProcedure } from '../../trpc';
+import { authedProcedure } from '../../trpc';
 import { generateAssistantMessage } from './sendMessage';
 
 export const CreateChatSchema = z.object({
     initialMessage: z.string(),
 });
 
-export const create = publicProcedure
+export const create = authedProcedure
     .input(CreateChatSchema)
     .mutation(async ({ input, ctx }) => {
         const chatID = ulid();

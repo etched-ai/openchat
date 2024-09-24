@@ -7,14 +7,14 @@ import { type DBChatMessage, DBChatMessageSchema } from '@repo/db';
 import { tracked } from '@trpc/server';
 import { type DatabasePool, sql } from 'slonik';
 import { z } from 'zod';
-import { publicProcedure } from '../../trpc';
+import { authedProcedure } from '../../trpc';
 
 export const ListenNewMessagesSchema = z.object({
     chatID: z.string(),
     latestSeenMessageID: z.string().optional(),
 });
 
-export const listenNewMessages = publicProcedure
+export const listenNewMessages = authedProcedure
     .input(ListenNewMessagesSchema)
     .subscription(async function* ({ input, ctx }) {
         const channelName = subscriptionChannels.chatMessages(input.chatID);
