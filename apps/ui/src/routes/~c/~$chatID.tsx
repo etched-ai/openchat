@@ -14,7 +14,7 @@ import ChatContainer from './components/chatContainer';
 import Message, { AssistantMessage } from './components/message';
 
 type InfiniteQueryData = {
-    pages: TRPCOutputs['chatMessages']['infiniteList'][];
+    pages: TRPCOutputs['chat']['infiniteListMessages'][];
 };
 
 export const Route = createFileRoute('/c/$chatID')({
@@ -25,22 +25,12 @@ export const Route = createFileRoute('/c/$chatID')({
                 to: '/',
             });
         }
-        // Some page redirecting to the chat could give us an initial chat message that
-        // should immediately start preocessing
-        const initialChatStream = context.initialChatStream;
-        context.initialChatStream = null;
 
         // Put some data in the cache
-        await trpcQueryUtils.chatMessages.infiniteList.prefetchInfinite({
+        await trpcQueryUtils.chat.infiniteListMessages.prefetchInfinite({
             chatID: params.chatID,
             limit: 10,
         });
-
-        const ret = {
-            initialChatStream,
-        };
-
-        return ret;
     },
     component: Chat,
 });
@@ -48,12 +38,13 @@ export const Route = createFileRoute('/c/$chatID')({
 function Chat() {
     const { session } = Route.useRouteContext();
     const { chatID } = Route.useParams();
-    const { initialChatStream } = useLoaderData({
-        from: '/c/$chatID',
-    });
+
+    const [latestSeenMessageID, setLatestSeenMessageID] = useState<
+        string | undefined
+    >(undefined);
 
     const infiniteMessagesQueryKey = getQueryKey(
-        trpc.chatMessages.infiniteList,
+        trpc.chat.infiniteListMessages,
         {
             chatID,
             limit: 10,
@@ -62,7 +53,7 @@ function Chat() {
     );
     const getNewPageData = (
         prevData: InfiniteQueryData,
-        message: TRPCOutputs['chatMessages']['infiniteList']['items'][0],
+        message: TRPCOutputs['chat']['infiniteListMessages']['items'][0],
     ) => {
         const updatedPage = { ...prevData.pages[0] };
         const existingMessageIndex = updatedPage.items.findIndex(
@@ -87,46 +78,7 @@ function Chat() {
         };
     };
 
-    const processMessageChunk = async (
-        chunk:
-            | AsyncGeneratorYieldType<TRPCOutputs['chatMessages']['send']>
-            | AsyncGeneratorYieldType<TRPCOutputs['chat']['create']>,
-    ): Promise<void> => {
-        if (chunk.type === 'chat') {
-            // WTF
-            return;
-        } else if (chunk.type === 'userMessage') {
-            queryClient.setQueryData(
-                infiniteMessagesQueryKey,
-                (prevData: InfiniteQueryData) => {
-                    const newData = getNewPageData(prevData, chunk.message);
-                    // Remove optimistic message
-                    newData.pages[0].items = newData.pages[0].items.filter(
-                        (item) => item.id !== 'OPTIMISTIC_USER_MESSAGE',
-                    );
-                    return newData;
-                },
-            );
-        } else if (chunk.type === 'messageChunk') {
-            setCurrentlyStreamingMessage((m) => {
-                const chunkContent = chunk.messageChunk.messageContent;
-                if (m === null) {
-                    return chunkContent;
-                } else {
-                    return m + chunk.messageChunk.messageContent;
-                }
-            });
-        } else {
-            queryClient.setQueryData(
-                infiniteMessagesQueryKey,
-                (prevData: InfiniteQueryData) =>
-                    getNewPageData(prevData, chunk.message),
-            );
-            setCurrentlyStreamingMessage(null);
-        }
-    };
-
-    const sendMessageMutation = trpc.chatMessages.send.useMutation({
+    const sendMessageMutation = trpc.chat.sendMessage.useMutation({
         onMutate: (variables) => {
             // Optimistically set the user message
             queryClient.setQueryData(
@@ -138,76 +90,68 @@ function Chat() {
                         userID: session?.user.id ?? '',
                         messageType: 'user',
                         messageContent: variables.message,
-                        responseStatus: 'not_started',
+                        status: 'done',
                         createdAt: DateTime.now().toISO(),
                         updatedAt: DateTime.now().toISO(),
                     }),
             );
         },
         onSuccess: async (data, variables, context) => {
-            for await (const chunk of data) {
-                processMessageChunk(chunk);
-            }
-            queryClient.invalidateQueries({
-                queryKey: infiniteMessagesQueryKey,
-            });
-            const chatListQueryKey = getQueryKey(
-                trpc.chat.infiniteList,
-                {
-                    limit: 10,
+            setLatestSeenMessageID(data.id);
+            queryClient.setQueryData(
+                infiniteMessagesQueryKey,
+                (prevData: InfiniteQueryData) => {
+                    const newData = getNewPageData(prevData, data);
+                    // Remove optimistic message
+                    newData.pages[0].items = newData.pages[0].items.filter(
+                        (item) => item.id !== 'OPTIMISTIC_USER_MESSAGE',
+                    );
+                    return newData;
                 },
-                'any',
             );
-            queryClient.invalidateQueries({
-                queryKey: chatListQueryKey,
-            });
         },
     });
 
-    const [currentlyStreamingMessage, setCurrentlyStreamingMessage] = useState<
-        string | null
-    >(null);
+    // TEMP: To trigger rerenders until I figure out how to do this better
+    const [, setCurrentlyStreamingMessage] = useState<string>('');
 
-    // If it was passed an initialMessage then it means we have a message to immediately
-    // start rendering
-    // biome-ignore lint/correctness/useExhaustiveDependencies: It's fine
-    useEffect(() => {
-        if (!initialChatStream) return;
-
-        let isMounted = true;
-        // This doesn't totally work since the reader is async, so when you release the
-        // lock there could be a pending read which would then error. However, it still
-        // works so I'm just going to leave it like this because I don't know how to
-        // fix it
-        const reader = initialChatStream.getReader();
-
-        const readStream = async () => {
-            try {
-                while (isMounted) {
-                    const { done, value: chunk } = await reader.read();
-                    if (done) {
-                        queryClient.invalidateQueries({
-                            queryKey: infiniteMessagesQueryKey,
-                        });
-                        break;
-                    }
-
-                    processMessageChunk(chunk);
+    trpc.chat.listenNewMessages.useSubscription(
+        {
+            chatID,
+            latestSeenMessageID,
+        },
+        {
+            onData: (data) => {
+                // TODO: Shouldn't rerender the entire list on every update
+                queryClient.setQueryData(
+                    infiniteMessagesQueryKey,
+                    (prevData: InfiniteQueryData) => {
+                        let messageToUpdate = prevData.pages[0].items.find(
+                            (m) => m.id === data.id,
+                        );
+                        if (!messageToUpdate) {
+                            messageToUpdate = data;
+                        } else {
+                            if (data.status === 'streaming') {
+                                messageToUpdate.messageContent +=
+                                    data.messageContent;
+                                setCurrentlyStreamingMessage(
+                                    messageToUpdate.messageContent,
+                                );
+                            } else {
+                                messageToUpdate = data;
+                                setCurrentlyStreamingMessage('');
+                            }
+                        }
+                        return getNewPageData(prevData, messageToUpdate);
+                    },
+                );
+                if (data.status === 'done') {
+                    setLatestSeenMessageID(data.id);
                 }
-            } catch (err) {
-                console.error('[ERROR] failed reading stream:', err);
-            } finally {
-                reader.releaseLock();
-            }
-        };
-
-        readStream();
-
-        return () => {
-            isMounted = false;
-            reader.releaseLock();
-        };
-    }, [initialChatStream]);
+            },
+        },
+    );
 
     const handleSubmit = (message: string) => {
         if (!sendMessageMutation.isPending) {
@@ -220,10 +164,7 @@ function Chat() {
 
     return (
         <div className="w-full h-full flex flex-col">
-            <ChatContainer
-                chatID={chatID}
-                currentlyStreamingMessage={currentlyStreamingMessage}
-            />
+            <ChatContainer chatID={chatID} />
             <div className="fixed bottom-0 min-h-20 max-h-[40rem] self-center w-full max-w-4xl rounded-t-lg bg-muted border-[0.5px] border-border/20 overflow-y-scroll pb-2">
                 <InputBox
                     handleSubmit={handleSubmit}

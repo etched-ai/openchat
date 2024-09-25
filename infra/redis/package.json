@@ -1,0 +1,9 @@
+{
+    "name": "redis",
+    "version": "0.0.0",
+    "private": true,
+    "license": "MIT",
+    "scripts": {
+        "dev": "docker-compose up"
+    }
+}

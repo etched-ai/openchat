@@ -9,13 +9,8 @@ import {
 import UserIcon from '@/components/ui/userIcon';
 import * as KeyboardListener from '@/lib/keyboardListener';
 import { supabase } from '@/lib/supabase';
-import {
-    type TRPCOutputs,
-    setAuthToken,
-    trpc,
-    trpcQueryUtils,
-} from '@/lib/trpc';
-import { type AsyncGeneratorYieldType, truncateString } from '@/lib/utils';
+import { setAuthToken, trpc, trpcQueryUtils } from '@/lib/trpc';
+import { truncateString } from '@/lib/utils';
 import type { Session } from '@supabase/supabase-js';
 import {
     Link,
@@ -30,9 +25,6 @@ import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 
 type RouterContext = {
-    initialChatStream: ReadableStream<
-        AsyncGeneratorYieldType<TRPCOutputs['chat']['create']>
-    > | null;
     session: Session | null;
 };
 
@@ -49,6 +41,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         // Also have to handle potential sign in errors along with that.
         if (!session) {
             const { data } = await supabase.auth.signInAnonymously();
+            console.log('ANON SIGNIN', data);
             session = data.session;
             isAnonymous = true;
         }

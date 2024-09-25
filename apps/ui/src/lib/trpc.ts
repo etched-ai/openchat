@@ -1,8 +1,16 @@
 import type { AppRouter } from '@repo/server/src/trpc/router';
-import { createTRPCClient, unstable_httpBatchStreamLink } from '@trpc/client';
+import {
+    httpBatchLink,
+    splitLink,
+    unstable_httpSubscriptionLink,
+} from '@trpc/client';
 import { createTRPCQueryUtils, createTRPCReact } from '@trpc/react-query';
 import type { inferRouterOutputs } from '@trpc/server';
+import { EventSourcePolyfill } from 'event-source-polyfill';
 import { queryClient } from './reactQuery';
+
+// @ts-expect-error It's fine
+globalThis.EventSource = EventSourcePolyfill;
 
 let token: string | undefined;
 
@@ -19,13 +27,26 @@ export const trpc = createTRPCReact<AppRouter>();
 
 export const trpcClient = trpc.createClient({
     links: [
-        unstable_httpBatchStreamLink({
-            url: `${API_BASE_URL}/trpc`,
-            headers() {
-                return {
-                    authorization: `Bearer ${token}`,
-                };
-            },
+        splitLink({
+            condition: (op) => op.type === 'subscription',
+            true: unstable_httpSubscriptionLink({
+                url: `${API_BASE_URL}/trpc`,
+                eventSourceOptions() {
+                    return {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    } as EventSourceInit;
+                },
+            }),
+            false: httpBatchLink({
+                url: `${API_BASE_URL}/trpc`,
+                headers() {
+                    return {
+                        authorization: `Bearer ${token}`,
+                    };
+                },
+            }),
         }),
     ],
 });
@@ -33,17 +54,4 @@ export const trpcClient = trpc.createClient({
 export const trpcQueryUtils = createTRPCQueryUtils({
     queryClient,
     client: trpcClient,
-});
-
-export const vanillaTrpcClient = createTRPCClient({
-    links: [
-        unstable_httpBatchStreamLink({
-            url: `${API_BASE_URL}/trpc`,
-            headers() {
-                return {
-                    authorization: `Bearer ${token}`,
-                };
-            },
-        }),
-    ],
 });

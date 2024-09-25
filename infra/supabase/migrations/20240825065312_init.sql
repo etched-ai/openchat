@@ -20,8 +20,7 @@ create table
     "messageContent" text not null,
     "createdAt" timestamp with time zone not null default now(),
     "updatedAt" timestamp with time zone not null default now(),
-    "responseStatus" text null,
-    "responseMessageID" text null,
+    "status" text null,
     constraint ChatMessage_pkey primary key (id),
     constraint ChatMessage_chatID_fkey foreign key ("chatID") references "Chat" (id) on update cascade on delete cascade,
     constraint ChatMessage_userID_fkey foreign key ("userID") references auth.users (id)

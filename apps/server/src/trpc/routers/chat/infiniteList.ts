@@ -2,9 +2,9 @@ import { type DBChat, DBChatSchema } from '@repo/db';
 import { TRPCError } from '@trpc/server';
 import { sql } from 'slonik';
 import { z } from 'zod';
-import { publicProcedure } from '../../trpc';
+import { authedProcedure } from '../../trpc';
 
-export const infiniteList = publicProcedure
+export const infiniteList = authedProcedure
     .input(
         z.object({
             limit: z.number().min(1).max(100).default(50),

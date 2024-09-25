@@ -27,19 +27,22 @@
         "@trpc/server": "11.0.0-rc.477",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",
+        "event-source-polyfill": "^1.0.31",
         "lucide-react": "^0.426.0",
         "luxon": "^3.5.0",
         "react": "19.0.0-rc-d48603a5-20240813",
         "react-dom": "19.0.0-rc-d48603a5-20240813",
         "react-markdown": "^9.0.1",
         "remark-gfm": "^4.0.0",
-        "ulid": "^2.3.0"
+        "ulid": "^2.3.0",
+        "zod": "^3.23.8"
     },
     "devDependencies": {
         "@repo/db": "workspace:*",
         "@repo/server": "workspace:*",
         "@tanstack/router-devtools": "^1.47.1",
         "@tanstack/router-plugin": "^1.47.0",
+        "@types/event-source-polyfill": "^1.0.5",
         "@types/luxon": "^3.4.2",
         "@types/node": "^22.1.0",
         "@types/react": "npm:types-react@rc",
