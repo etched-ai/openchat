@@ -13,7 +13,6 @@ const router = createRouter({
     routeTree,
     defaultPreloadStaleTime: 0,
     context: {
-        initialChatStream: null,
         session: null,
     },
 });

@@ -34,7 +34,7 @@ server.register(fastifyRequestContext);
 server.register(fastifyCors, {
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type'],
+    allowedHeaders: ['Content-Type', 'authorization'],
     credentials: true,
 });
 
@@ -56,7 +56,9 @@ server.register(SlonikDBSingletonPlugin);
 
 // Auth
 server.addHook('onRequest', async (req, reply) => {
-    const accessToken = req.cookies['sb-access-token'];
+    // const accessToken = req.cookies['sb-access-token'];
+    let accessToken = req.headers.authorization;
+    accessToken = accessToken?.substring(7);
 
     if (!accessToken) {
         console.log('NO ACCESS TOKEN');

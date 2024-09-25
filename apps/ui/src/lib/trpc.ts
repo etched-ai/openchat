@@ -1,14 +1,16 @@
 import type { AppRouter } from '@repo/server/src/trpc/router';
 import {
-    createTRPCClient,
     httpBatchLink,
     splitLink,
-    unstable_httpBatchStreamLink,
     unstable_httpSubscriptionLink,
 } from '@trpc/client';
 import { createTRPCQueryUtils, createTRPCReact } from '@trpc/react-query';
 import type { inferRouterOutputs } from '@trpc/server';
+import { EventSourcePolyfill } from 'event-source-polyfill';
 import { queryClient } from './reactQuery';
+
+// @ts-expect-error It's fine
+globalThis.EventSource = EventSourcePolyfill;
 
 let token: string | undefined;
 
@@ -29,17 +31,20 @@ export const trpcClient = trpc.createClient({
             condition: (op) => op.type === 'subscription',
             true: unstable_httpSubscriptionLink({
                 url: `${API_BASE_URL}/trpc`,
-                eventSourceOptions: {
-                    withCredentials: true,
+                eventSourceOptions() {
+                    return {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    } as EventSourceInit;
                 },
             }),
             false: httpBatchLink({
                 url: `${API_BASE_URL}/trpc`,
-                fetch(url, options) {
-                    return fetch(url, {
-                        ...options,
-                        credentials: 'include',
-                    });
+                headers() {
+                    return {
+                        authorization: `Bearer ${token}`,
+                    };
                 },
             }),
         }),
