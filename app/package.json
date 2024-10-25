@@ -1,0 +1,30 @@
+{
+    "name": "@repo/app",
+    "private": true,
+    "version": "0.0.1",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "dev": "vinxi dev",
+        "build": "vinxi build",
+        "start": "vinxi start",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@tanstack/react-router": "^1.76.1",
+        "@tanstack/start": "^1.76.2",
+        "@trpc/client": "11.0.0-rc.593",
+        "@trpc/server": "11.0.0-rc.593",
+        "@vitejs/plugin-react": "^4.3.1",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "vinxi": "0.4.3"
+    },
+    "devDependencies": {
+        "@types/react": "^18.3.12",
+        "@types/react-dom": "^18.3.1"
+    }
+}
