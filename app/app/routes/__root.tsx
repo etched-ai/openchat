@@ -1,7 +1,27 @@
 import { createRootRoute } from '@tanstack/react-router';
 import { Outlet, ScrollRestoration } from '@tanstack/react-router';
-import { Body, Head, Html, Meta, Scripts } from '@tanstack/start';
+import {
+    Body,
+    Head,
+    Html,
+    Meta,
+    Scripts,
+    createServerFn,
+} from '@tanstack/start';
 import type React from 'react';
+import { getSupabaseServerClient } from '../utils/supabase';
+
+const fetchUser = createServerFn('GET', async () => {
+    const supabase = getSupabaseServerClient();
+    const { data, error } = await supabase.auth.getUser();
+
+    if (!data.user?.email || error) {
+        if (error) console.error(error);
+        return null;
+    }
+
+    return data.user;
+});
 
 export const Route = createRootRoute({
     meta: () => [
@@ -16,6 +36,13 @@ export const Route = createRootRoute({
             title: 'Etched Teachable',
         },
     ],
+    beforeLoad: async () => {
+        const user = await fetchUser();
+
+        return {
+            user,
+        };
+    },
     component: RootComponent,
 });
 

@@ -1,5 +1,5 @@
+import { trpc } from '@/utils/api';
 import { createFileRoute } from '@tanstack/react-router';
-import { trpc } from '../utils/api';
 
 export const Route = createFileRoute('/')({
     loader: async () => {
