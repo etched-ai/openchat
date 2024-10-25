@@ -11,22 +11,28 @@ import {
 import type React from 'react';
 import '@/styles/app.css';
 import { getSupabaseServerClient } from '@/lib/supabase';
+import type { AppRouter } from '@/server/trpc/router';
 import type { QueryClient } from '@tanstack/react-query';
+import type { TRPCUntypedClient } from '@trpc/client';
+import type { CreateTRPCReactBase, createTRPCReact } from '@trpc/react-query';
+import type { TRPCQueryUtils, UtilsLike } from '@trpc/react-query/shared';
 
-const fetchUser = createServerFn('GET', async () => {
+const fetchSession = createServerFn('GET', async () => {
     const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getSession();
 
-    if (!data.user?.email || error) {
+    if (!data.session || error) {
         if (error) console.error(error);
         return null;
     }
 
-    return data.user;
+    return data.session;
 });
 
 export const Route = createRootRouteWithContext<{
     queryClient: QueryClient;
+    trpc: ReturnType<typeof createTRPCReact<AppRouter>>;
+    trpcQueryUtils: UtilsLike<AppRouter>;
 }>()({
     meta: () => [
         {
@@ -41,10 +47,10 @@ export const Route = createRootRouteWithContext<{
         },
     ],
     beforeLoad: async () => {
-        const user = await fetchUser();
+        const session = await fetchSession();
 
         return {
-            user,
+            session,
         };
     },
     component: RootComponent,
