@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import {
     createTRPCClient,
     httpBatchLink,
@@ -5,7 +6,10 @@ import {
     splitLink,
     unstable_httpSubscriptionLink,
 } from '@trpc/client';
+import { createTRPCQueryUtils, createTRPCReact } from '@trpc/react-query';
 import type { AppRouter } from '../server/trpc/router';
+
+export const queryClient = new QueryClient();
 
 const getBaseUrl = () => {
     if (typeof window !== 'undefined') return '';
@@ -14,8 +18,9 @@ const getBaseUrl = () => {
     return `http://localhost:${process.env.PORT ?? 3000}`;
 };
 
+export const trpc = createTRPCReact<AppRouter>();
 // create the client, export it
-export const trpc = createTRPCClient<AppRouter>({
+export const trpcClient = trpc.createClient({
     links: [
         // will print out helpful logs when using client
         loggerLink(),
@@ -25,7 +30,14 @@ export const trpc = createTRPCClient<AppRouter>({
             true: unstable_httpSubscriptionLink({
                 url: `${getBaseUrl()}/api/trpc`,
             }),
-            false: httpBatchLink({ url: `${getBaseUrl()}/api/trpc` }),
+            false: httpBatchLink({
+                url: `${getBaseUrl()}/api/trpc`,
+            }),
         }),
     ],
+});
+
+export const trpcQueryUtils = createTRPCQueryUtils({
+    queryClient,
+    client: trpcClient,
 });

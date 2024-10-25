@@ -2,9 +2,8 @@ import { trpc } from '@/lib/api';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({
-    loader: async () => {
-        const res = await trpc.chat.test.query();
-        console.log(res);
+    loader: async ({ context }) => {
+        const queryClient = context.queryClient;
     },
     component: Home,
 });

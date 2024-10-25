@@ -1,4 +1,4 @@
-import { createRootRoute } from '@tanstack/react-router';
+import { createRootRouteWithContext } from '@tanstack/react-router';
 import { Outlet, ScrollRestoration } from '@tanstack/react-router';
 import {
     Body,
@@ -11,6 +11,7 @@ import {
 import type React from 'react';
 import '@/styles/app.css';
 import { getSupabaseServerClient } from '@/lib/supabase';
+import type { QueryClient } from '@tanstack/react-query';
 
 const fetchUser = createServerFn('GET', async () => {
     const supabase = getSupabaseServerClient();
@@ -24,7 +25,9 @@ const fetchUser = createServerFn('GET', async () => {
     return data.user;
 });
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+    queryClient: QueryClient;
+}>()({
     meta: () => [
         {
             charSet: 'utf-8',
