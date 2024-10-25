@@ -1,13 +1,15 @@
+import { createContext } from '@/lib/trpc/context';
+import { appRouter } from '@/lib/trpc/router';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
-import { appRouter } from '../../server/trpc/router';
+import { type HTTPEvent, parseCookies } from 'vinxi/http';
 
-const handler = (event: { request: Request; params: Record<never, string> }) =>
+const handler = (event: HTTPEvent) =>
     fetchRequestHandler({
         endpoint: '/api/trpc',
         req: event.request,
         router: appRouter,
-        createContext: () => event,
+        createContext: () => createContext(event),
     });
 
 export const Route = createAPIFileRoute('/api/trpc')({

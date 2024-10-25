@@ -12,8 +12,8 @@ import { createTRPCQueryUtils, createTRPCReact } from '@trpc/react-query';
 import { Fragment } from 'react';
 import { DefaultCatchBoundary } from './components/DefaultCatchBoundary';
 import { NotFound } from './components/NotFound';
+import type { AppRouter } from './lib/trpc/router';
 import { routeTree } from './routeTree.gen';
-import type { AppRouter } from './server/trpc/router';
 
 const getBaseUrl = () => {
     if (typeof window !== 'undefined') return '';
@@ -23,12 +23,9 @@ const getBaseUrl = () => {
 };
 
 export function createRouter() {
-    console.log('A');
     const queryClient = new QueryClient();
-    console.log('B');
 
     const trpc = createTRPCReact<AppRouter>();
-    console.log('C');
     // create the client
     const trpcClient = trpc.createClient({
         links: [
@@ -46,12 +43,10 @@ export function createRouter() {
             }),
         ],
     });
-    console.log('D');
     const trpcQueryUtils = createTRPCQueryUtils({
         queryClient,
         client: trpcClient,
     });
-    console.log('E');
 
     const baseTanstackRouter = createTanStackRouter({
         routeTree,
@@ -60,12 +55,10 @@ export function createRouter() {
         defaultErrorComponent: DefaultCatchBoundary,
         defaultNotFoundComponent: () => <NotFound />,
     });
-    console.log('F');
     const withQueryClient = routerWithQueryClient(
         baseTanstackRouter,
         queryClient,
     );
-    console.log('G');
 
     const ogOptions = withQueryClient.options;
     withQueryClient.options = {
