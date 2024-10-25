@@ -9,7 +9,8 @@ import {
     createServerFn,
 } from '@tanstack/start';
 import type React from 'react';
-import { getSupabaseServerClient } from '../utils/supabase';
+import '@/styles/app.css';
+import { getSupabaseServerClient } from '@/lib/supabase';
 
 const fetchUser = createServerFn('GET', async () => {
     const supabase = getSupabaseServerClient();

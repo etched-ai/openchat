@@ -4,7 +4,8 @@
         "ignore": [
             "apps/ui/src/routeTree.gen.ts",
             "apps/ui/tsconfig*.json",
-            "app/app/routeTree.gen.ts"
+            "app/app/routeTree.gen.ts",
+            "app/tailwind.config.js"
         ]
     },
     "organizeImports": {

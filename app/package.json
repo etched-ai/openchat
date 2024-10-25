@@ -5,7 +5,7 @@
     "type": "module",
     "main": "index.js",
     "scripts": {
-        "dev": "vinxi dev",
+        "dev": "source .env && vinxi dev",
         "build": "vinxi build",
         "start": "vinxi start",
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,8 +20,13 @@
         "@trpc/client": "11.0.0-rc.593",
         "@trpc/server": "11.0.0-rc.593",
         "@vitejs/plugin-react": "^4.3.1",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.1.1",
+        "lucide-react": "^0.453.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
+        "tailwind-merge": "^2.5.4",
+        "tailwindcss-animate": "^1.0.7",
         "vinxi": "0.4.3"
     },
     "devDependencies": {

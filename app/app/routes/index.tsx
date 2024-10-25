@@ -1,4 +1,4 @@
-import { trpc } from '@/utils/api';
+import { trpc } from '@/lib/api';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({
@@ -11,7 +11,7 @@ export const Route = createFileRoute('/')({
 
 function Home() {
     return (
-        <div className="p-2">
+        <div className="p-2 text-2xl">
             <h3>Welcome Home!!!</h3>
         </div>
     );
