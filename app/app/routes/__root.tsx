@@ -254,7 +254,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                     </TooltipProvider>
                     <div className="flex flex-1">{children}</div>
                 </div>
-                <TanStackRouterDevtools />
+                <TanStackRouterDevtools position="bottom-right" />
                 <ScrollRestoration />
                 <Scripts />
             </Body>

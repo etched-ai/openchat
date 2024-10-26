@@ -27,10 +27,8 @@ export const Route = createFileRoute('/c/$chatID')({
 });
 
 function Chat() {
-    console.log(1);
     const { user, trpc, queryClient } = Route.useRouteContext();
     const { chatID } = Route.useParams();
-    console.log(2);
 
     const [latestSeenMessageID, setLatestSeenMessageID] = useState<
         string | undefined
@@ -155,7 +153,6 @@ function Chat() {
         }
     };
 
-    console.log(3);
     return (
         <div className="w-full h-full flex flex-col">
             <ChatContainer chatID={chatID} trpc={trpc} />

@@ -1,14 +1,15 @@
 import InputBox from '@/components/InputBox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { getSupabaseClient, getSupabaseServerClient } from '@/lib/supabase';
-import type { Session, User } from '@supabase/supabase-js';
+import { getSupabaseServerClient } from '@/lib/supabase';
+import type { User } from '@supabase/supabase-js';
 import {
     createFileRoute,
     useRouteContext,
     useRouter,
     useSearch,
 } from '@tanstack/react-router';
+import { createServerFn } from '@tanstack/start';
 import { getQueryKey } from '@trpc/react-query';
 import { XCircle } from 'lucide-react';
 import { DateTime } from 'luxon';
@@ -23,22 +24,18 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/')({
     validateSearch: searchSchema,
-    async beforeLoad(ctx) {
-        if (
-            ctx.search.error &&
-            ctx.search.error_code === 422 &&
-            ctx.search.error_description ===
-                'Identity+is+already+linked+to+another+user'
-        ) {
-            return {
-                needsRegularLogin: true,
-            };
-        }
-        return {
-            needsRegularLogin: false,
-        };
-    },
     component: Index,
+});
+
+const tryLinkIdentity = createServerFn('POST', async () => {
+    const supabase = getSupabaseServerClient();
+    const res = await supabase.auth.linkIdentity({
+        provider: 'google',
+        options: {
+            redirectTo: 'http://localhost:3000/api/auth/callback',
+        },
+    });
+    return res;
 });
 
 function maybeGetName(user: User | null): null | string {
@@ -67,16 +64,15 @@ const getGreeting = () => {
 
 function Index() {
     const router = useRouter();
-    const { user, needsRegularLogin, trpc, queryClient } = useRouteContext({
+    const { user, trpc, queryClient } = useRouteContext({
         from: '/',
     });
-    const supabase = useMemo(() => getSupabaseServerClient(), []);
 
     const name = maybeGetName(user);
 
     const createChatMutation = trpc.chat.create.useMutation();
 
-    const handleSubmit = async (text: string): void => {
+    const handleSubmit = async (text: string): Promise<void> => {
         // Create the chat and send the first message
         const newChat = await createChatMutation.mutateAsync({
             initialMessage: text,
@@ -94,37 +90,21 @@ function Index() {
         });
     };
 
-    // const handleLogin = async (): Promise<void> => {
-    //     // Try to link the identity
-    //     const linkResult = await supabase.auth.linkIdentity({
-    //         provider: 'google',
-    //     });
-    //     if (linkResult.error) {
-    //         console.error('FAILED LINK', linkResult.error);
-    //     }
-    //     console.log('LINK SUCCESS', linkResult.data);
-    // };
-
-    // useEffect(() => {
-    //     if (needsRegularLogin) {
-    //         // If we failed to link the identity because the user already has an account
-    //         // then automatically try logging in. It's a bit weird but for now this is just
-    //         // how supabase works. I also wish there was a way to do it without the page
-    //         // redirects in between.
-    //         // TODO: I think this will infinite loop during the login process if either the link
-    //         // fails
-    //         (async () => {
-    //             const loginResult = await supabase.auth.signInWithOAuth({
-    //                 provider: 'google',
-    //             });
-    //             if (loginResult.error) {
-    //                 console.error('FAILED LOGIN', loginResult);
-    //                 return;
-    //             }
-    //             console.log('LOGIN SUCCESS', loginResult.data);
-    //         })();
-    //     }
-    // }, [needsRegularLogin, supabase]);
+    const handleLogin = async () => {
+        const res = await tryLinkIdentity();
+        if (res.error) {
+            router.navigate({
+                to: '/',
+                search: () => ({
+                    error: res.error.name,
+                    error_code: Number.parseInt(res.error.code ?? '400'),
+                    error_description: res.error.message,
+                }),
+            });
+        } else {
+            window.open(res.data.url, '_self');
+        }
+    };
 
     return (
         <div className="w-full h-full justify-center items-center flex flex-col p-2">
@@ -140,8 +120,7 @@ function Index() {
                 />
             </div>
             {(!user || user.is_anonymous) && (
-                // <Button onClick={handleLogin} className="w-72 mt-6">
-                <Button onClick={() => {}} className="w-72 mt-6">
+                <Button onClick={handleLogin} className="w-72 mt-6">
                     Log in with Google
                 </Button>
             )}

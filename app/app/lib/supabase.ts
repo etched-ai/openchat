@@ -1,5 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient, createServerClient } from '@supabase/ssr';
 import { parseCookies, setCookie } from 'vinxi/http';
 
 export function getSupabaseServerClient() {
@@ -25,10 +24,4 @@ export function getSupabaseServerClient() {
             },
         },
     );
-}
-
-export function getSupabaseClient() {
-    const supabaseUrl = process.env.SUPABASE_URL ?? '';
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY ?? '';
-    return createClient(supabaseUrl, supabaseAnonKey);
 }
