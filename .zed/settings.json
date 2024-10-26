@@ -1,0 +1,36 @@
+{
+    "tab_size": 4,
+    "languages": {
+        "TSX": {
+            "formatter": {
+                "language_server": {
+                    "name": "biome"
+                }
+            }
+        },
+        "TypeScript": {
+            "formatter": {
+                "language_server": {
+                    "name": "biome"
+                }
+            }
+        },
+        "JavaScript": {
+            "formatter": {
+                "language_server": {
+                    "name": "biome"
+                }
+            }
+        },
+        "JSON": {
+            "formatter": {
+                "language_server": {
+                    "name": "biome"
+                }
+            }
+        }
+    },
+    "auto_install_extensions": {
+        "biome": true
+    }
+}
