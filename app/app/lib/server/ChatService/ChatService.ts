@@ -1,7 +1,10 @@
 import type { IChatService } from './ChatService.interface';
 
 import type { DBChatMessage } from '../db';
-import { getDefaultSystemPrompt } from './prompts/ChatPrompt';
+import {
+    getDefaultSystemPrompt,
+    getExampleExchange,
+} from './prompts/ChatPrompt';
 
 import assert from 'node:assert';
 import ProgramState, { OpenAIBackend } from 'enochian-js';
@@ -53,6 +56,11 @@ export default class ChatService implements IChatService {
             s.add(s.system`${getDefaultSystemPrompt()}`);
         }
 
+        // const exampleExchange = getExampleExchange();
+        // s.add(s.user`${exampleExchange[0]?.content ?? ''}`).add(
+        //     s.assistant`${exampleExchange[1]?.content ?? ''}`,
+        // );
+
         if (input.previousMessages) {
             for (let i = input.previousMessages.length - 1; i >= 0; i--) {
                 const m = input.previousMessages[i];
@@ -67,7 +75,9 @@ export default class ChatService implements IChatService {
 
         const chatIterator = s
             .add(s.user`${input.message}`)
-            .add(s.assistant`${s.gen('response', { stream: true })}`);
+            .add(
+                s.assistant`${s.gen('response', { stream: true, sampling_params: { temperature: 0 } })}`,
+            );
 
         const messageID = input.messageID ?? ulid();
 
