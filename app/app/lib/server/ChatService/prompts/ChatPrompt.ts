@@ -1,95 +1,4 @@
-import type { DBChatMessage } from '@/lib/db';
 import { DateTime } from 'luxon';
-import type OpenAI from 'openai';
-import { MAX_CONTEXT_LENGTH } from '../AIService';
-import type { GetChatPromptMessagesArgs } from '../AIService.interface';
-
-export function getChatPromptMessages(
-    args: GetChatPromptMessagesArgs,
-): OpenAI.ChatCompletionMessageParam[] {
-    const messages: OpenAI.ChatCompletionMessageParam[] = [];
-
-    let systemPromptMessage: OpenAI.ChatCompletionSystemMessageParam;
-    if (args.customSystemPrompt) {
-        systemPromptMessage = {
-            content: args.customSystemPrompt,
-            role: 'system',
-        };
-    } else {
-        systemPromptMessage = {
-            content: getDefaultSystemPrompt(),
-            role: 'system',
-        };
-    }
-    messages.push(systemPromptMessage);
-
-    // TODO: We should make our own dSPY type library (or implement it for typescript)
-    // so we can automatically handle trimming for context length and stuff. For now
-    // we'll just roughly estimate the token count and liberally trim messages
-    if (args.previousMessages != null) {
-        const previousMessages = args.previousMessages as DBChatMessage[];
-
-        const middleIdx = Math.floor(previousMessages.length / 2);
-        let leftIdx = middleIdx;
-        let rightIdx = middleIdx;
-
-        let totalCharacterCount = systemPromptMessage.content.length;
-        for (const message of previousMessages) {
-            totalCharacterCount += message.messageContent.length;
-        }
-        // Rough estimate
-        if (totalCharacterCount >= (MAX_CONTEXT_LENGTH - 100) * 4) {
-            let charactersToRemove =
-                totalCharacterCount - (MAX_CONTEXT_LENGTH - 100) * 4;
-            while (
-                charactersToRemove > 0 &&
-                leftIdx > 0 &&
-                rightIdx < previousMessages.length - 1
-            ) {
-                if (leftIdx > 0) {
-                    leftIdx -= 1;
-                    charactersToRemove -=
-                        previousMessages[leftIdx]?.messageContent.length ?? 0;
-                }
-                if (
-                    charactersToRemove > 0 &&
-                    rightIdx < previousMessages.length - 1
-                ) {
-                    charactersToRemove -=
-                        previousMessages[rightIdx]?.messageContent.length ?? 0;
-                    rightIdx += 1;
-                }
-            }
-        }
-
-        for (let i = 0; i < leftIdx; i++) {
-            if (previousMessages[i]?.messageType === 'assistant') {
-                messages.push({
-                    content: previousMessages[i]?.messageContent,
-                    role: 'assistant',
-                } as OpenAI.ChatCompletionAssistantMessageParam);
-            } else if (previousMessages[i]?.messageType === 'user') {
-                messages.push({
-                    content: previousMessages[i]?.messageContent,
-                    role: 'user',
-                } as OpenAI.ChatCompletionUserMessageParam);
-            } else {
-                // wtf
-                console.warn(
-                    '[WARNING] Unknown message type:',
-                    previousMessages[i],
-                );
-            }
-        }
-    }
-
-    messages.push({
-        content: args.newMessage,
-        role: 'user',
-    } as OpenAI.ChatCompletionUserMessageParam);
-
-    return messages;
-}
 
 export function getDefaultSystemPrompt(): string {
     return `The assistant is Charlie, created by Etched. You are named after the
@@ -154,5 +63,7 @@ export function getDefaultSystemPrompt(): string {
             Charlie uses markdown for code. Immediately after closing coding
             markdown, Charlie asks the user if they would like it to explain or
             break down the code. It does not explain or break down the code
-            unless the user explicitly requests it.`;
+            unless the user explicitly requests it.
+
+            `;
 }

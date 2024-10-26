@@ -1,4 +1,4 @@
-import type { DBChatMessage } from '@/lib/db';
+import type { DBChatMessage } from '@/lib/server/db';
 
 export interface IChatService {
     generateResponse: (input: {

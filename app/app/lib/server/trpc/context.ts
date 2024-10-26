@@ -1,6 +1,5 @@
 import type { User } from '@supabase/supabase-js';
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
-import AIService from '../AIService/AIService';
 import ChatService from '../ChatService/ChatService';
 import { getDbPool } from '../db';
 import { getSupabaseServerClient } from '../supabase';
@@ -18,14 +17,12 @@ export async function createContext(event: FetchCreateContextFnOptions) {
         user = data.user;
     }
 
-    const aiService = AIService.getInstance();
-    const chatService = new ChatService(aiService);
+    const chatService = new ChatService();
     const dbPool = await getDbPool();
 
     return {
         ...event,
         user,
-        aiService,
         chatService,
         dbPool,
     };
