@@ -4,6 +4,8 @@
         "ignore": [
             "app/app/routeTree.gen.ts",
             "app/tailwind.config.js",
+            "app/.vinxi",
+            "app/.vercel",
             "**/node_modules"
         ]
     },
