@@ -1,5 +1,5 @@
 import { Redis } from '@upstash/redis';
-import { Redis as ioRedis } from 'ioRedis';
+import { Redis as ioRedis } from 'ioredis';
 import z from 'zod';
 import { DBChatMessageSchema } from './db';
 
