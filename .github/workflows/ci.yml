@@ -1,4 +1,4 @@
-name: Biome Check
+name: CI
 
 on:
   push:
@@ -29,5 +29,5 @@ jobs:
         run: |
           pnpm install
 
-      - name: Run Biome check
-        run: pnpm exec biome check .
+      - name: Run CI
+        run: pnpm run CI
