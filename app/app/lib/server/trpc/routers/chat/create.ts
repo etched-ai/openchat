@@ -19,14 +19,14 @@ export const create = publicProcedure
         const chatID = ulid();
 
         // TODO: Change to pub sub sse with redis
-        const previewMessagePromise = maybeSetChatPreview(
-            {
-                chatID,
-                message: input.initialMessage,
-            },
-            ctx.dbPool,
-            ctx.aiService,
-        );
+        // const previewMessagePromise = maybeSetChatPreview(
+        //     {
+        //         chatID,
+        //         message: input.initialMessage,
+        //     },
+        //     ctx.dbPool,
+        //     ctx.aiService,
+        // );
 
         const newChat = (await ctx.dbPool.one(sql.type(DBChatSchema)`
             INSERT INTO "Chat" (
@@ -70,36 +70,36 @@ export const create = publicProcedure
         return newChat;
     });
 
-type MaybeSetChatPreviewParams = {
-    chatID: string;
-    message: string;
-};
-export async function maybeSetChatPreview(
-    params: MaybeSetChatPreviewParams,
-    pool: DatabasePool,
-    aiService: IAIService,
-): Promise<void> {
-    const { chatID, message } = params;
+// type MaybeSetChatPreviewParams = {
+//     chatID: string;
+//     message: string;
+// };
+// export async function maybeSetChatPreview(
+//     params: MaybeSetChatPreviewParams,
+//     pool: DatabasePool,
+//     aiService: IAIService,
+// ): Promise<void> {
+//     const { chatID, message } = params;
 
-    const messageSummary = await aiService
-        .getOpenAIClient()
-        .chat.completions.create({
-            model: aiService.getModelName(),
-            messages: [
-                {
-                    content: `Please summarize the following message into as short a phrase as possible that captures the meaning of the message. Do not surround it with quotation marks or anything: ${message}`,
-                    role: 'user',
-                },
-            ],
-        });
+//     const messageSummary = await aiService
+//         .getOpenAIClient()
+//         .chat.completions.create({
+//             model: aiService.getModelName(),
+//             messages: [
+//                 {
+//                     content: `Please summarize the following message into as short a phrase as possible that captures the meaning of the message. Do not surround it with quotation marks or anything: ${message}`,
+//                     role: 'user',
+//                 },
+//             ],
+//         });
 
-    const preview = messageSummary.choices[0]?.message.content;
-    if (!preview) return;
+//     const preview = messageSummary.choices[0]?.message.content;
+//     if (!preview) return;
 
-    await pool.any(sql.type(DBChatSchema)`
-        UPDATE "Chat"
-        SET "previewName" = ${preview}
-        WHERE id = ${chatID}
-        AND "previewName" IS NULL;
-    `);
-}
+//     await pool.any(sql.type(DBChatSchema)`
+//         UPDATE "Chat"
+//         SET "previewName" = ${preview}
+//         WHERE id = ${chatID}
+//         AND "previewName" IS NULL;
+//     `);
+// }

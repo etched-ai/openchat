@@ -38,6 +38,7 @@
         "@vitejs/plugin-react": "^4.3.1",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",
+        "enochian-js": "^0.0.3",
         "ioredis": "^5.4.1",
         "lucide-react": "^0.453.0",
         "luxon": "^3.5.0",
