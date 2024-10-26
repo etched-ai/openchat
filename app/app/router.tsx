@@ -2,7 +2,6 @@ import { QueryClient } from '@tanstack/react-query';
 import { createRouter as createTanStackRouter } from '@tanstack/react-router';
 import { routerWithQueryClient } from '@tanstack/react-router-with-query';
 import {
-    createTRPCClient,
     httpBatchLink,
     loggerLink,
     splitLink,
@@ -10,9 +9,11 @@ import {
 } from '@trpc/client';
 import { createTRPCQueryUtils, createTRPCReact } from '@trpc/react-query';
 import { Fragment } from 'react';
+
+import type { AppRouter } from './lib/server/trpc/router';
+
 import { DefaultCatchBoundary } from './components/DefaultCatchBoundary';
 import { NotFound } from './components/NotFound';
-import type { AppRouter } from './lib/trpc/router';
 import { routeTree } from './routeTree.gen';
 
 const getBaseUrl = () => {

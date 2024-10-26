@@ -1,10 +1,9 @@
+import type { createTRPCReact } from '@trpc/react-query';
+import { DateTime } from 'luxon';
 import type React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
 
-import type { AppRouter } from '@/lib/trpc/router';
-import { useRouteContext } from '@tanstack/react-router';
-import type { createTRPCReact } from '@trpc/react-query';
-import { DateTime } from 'luxon';
+import type { AppRouter } from '@/lib/server/trpc/router';
 import Message, { AssistantMessage } from './message';
 
 type Props = {

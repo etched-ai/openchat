@@ -1,10 +1,11 @@
-import { createContext } from '@/lib/trpc/context';
-import { appRouter } from '@/lib/trpc/router';
 import {
     type StartAPIMethodCallback,
     createAPIFileRoute,
 } from '@tanstack/start/api';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+
+import { createContext } from '@/lib/server/trpc/context';
+import { appRouter } from '@/lib/server/trpc/router';
 
 const handler: StartAPIMethodCallback<'/api/trpc'> = (event) =>
     fetchRequestHandler({

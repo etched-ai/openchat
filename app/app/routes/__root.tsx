@@ -1,11 +1,13 @@
+import type { User } from '@supabase/supabase-js';
+import type { QueryClient } from '@tanstack/react-query';
 import {
     Link,
     Outlet,
     ScrollRestoration,
     createRootRouteWithContext,
-    redirect,
     useNavigate,
 } from '@tanstack/react-router';
+import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import {
     Body,
     Head,
@@ -14,8 +16,17 @@ import {
     Scripts,
     createServerFn,
 } from '@tanstack/start';
+import type { createTRPCReact } from '@trpc/react-query';
+import type { UtilsLike } from '@trpc/react-query/shared';
+import { DateTime } from 'luxon';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+
+import * as KeyboardListener from '@/lib/client/keyboardListener';
+import { getSupabaseServerClient } from '@/lib/server/supabase';
+import type { AppRouter } from '@/lib/server/trpc/router';
+import { truncateString } from '@/lib/shared/utils';
+
 import '@/styles/app.css';
 import LogoBlack from '@/assets/logo-black.svg';
 import { Button } from '@/components/ui/button';
@@ -26,19 +37,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import UserIcon from '@/components/ui/userIcon';
-import * as KeyboardListener from '@/lib/keyboardListener';
-import { getSupabaseServerClient } from '@/lib/supabase';
-import type { AppRouter } from '@/lib/trpc/router';
-import { truncateString } from '@/lib/utils';
-import type { Session, User } from '@supabase/supabase-js';
-import type { QueryClient } from '@tanstack/react-query';
-import { TanStackRouterDevtools } from '@tanstack/router-devtools';
-import type { TRPCUntypedClient } from '@trpc/client';
-import type { CreateTRPCReactBase, createTRPCReact } from '@trpc/react-query';
-import type { TRPCQueryUtils, UtilsLike } from '@trpc/react-query/shared';
 import { ChevronLeft, ChevronRight, SquarePlus } from 'lucide-react';
-import { DateTime } from 'luxon';
-import { parseCookies } from 'vinxi/http';
 
 const fetchSession = createServerFn('GET', async () => {
     const supabase = getSupabaseServerClient();
