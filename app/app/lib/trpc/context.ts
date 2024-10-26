@@ -6,7 +6,6 @@ import { getDbPool } from '../db';
 import { getSupabaseServerClient } from '../supabase';
 
 export async function createContext(event: FetchCreateContextFnOptions) {
-    console.log('IM IN');
     const supabase = getSupabaseServerClient();
     const { data, error } = await supabase.auth.getUser();
 
@@ -19,14 +18,9 @@ export async function createContext(event: FetchCreateContextFnOptions) {
         user = data.user;
     }
 
-    console.log('WTF');
     const aiService = AIService.getInstance();
-    console.log(1);
     const chatService = new ChatService(aiService);
-    console.log(2);
     const dbPool = await getDbPool();
-
-    console.log('IT IS GETTING THERE');
 
     return {
         ...event,

@@ -47,11 +47,11 @@ function Chat() {
         message: TRPCOutputs['chat']['infiniteListMessages']['items'][0],
     ) => {
         const updatedPage = { ...prevData.pages[0] };
-        const existingMessageIndex = updatedPage.items.findIndex(
-            (item) => item.id === message.id,
-        );
+        const existingMessageIndex =
+            updatedPage.items?.findIndex((item) => item.id === message.id) ??
+            -1;
 
-        if (existingMessageIndex !== -1) {
+        if (existingMessageIndex !== -1 && updatedPage.items) {
             // If the message already exists, update it in place
             updatedPage.items = [
                 ...updatedPage.items.slice(0, existingMessageIndex),
@@ -60,7 +60,7 @@ function Chat() {
             ];
         } else {
             // If it's a new message, add it to the beginning of the array
-            updatedPage.items = [message, ...updatedPage.items];
+            updatedPage.items = [message, ...(updatedPage.items ?? [])];
         }
 
         return {
@@ -78,7 +78,7 @@ function Chat() {
                     getNewPageData(prevData, {
                         id: 'OPTIMISTIC_USER_MESSAGE',
                         chatID,
-                        userID: user.id ?? '',
+                        userID: user?.id ?? '',
                         messageType: 'user',
                         messageContent: variables.message,
                         status: 'done',
@@ -94,9 +94,11 @@ function Chat() {
                 (prevData: InfiniteQueryData) => {
                     const newData = getNewPageData(prevData, data);
                     // Remove optimistic message
-                    newData.pages[0].items = newData.pages[0].items.filter(
-                        (item) => item.id !== 'OPTIMISTIC_USER_MESSAGE',
-                    );
+                    if (!newData.pages[0]) return;
+                    newData.pages[0].items =
+                        newData.pages[0].items?.filter(
+                            (item) => item.id !== 'OPTIMISTIC_USER_MESSAGE',
+                        ) ?? [];
                     return newData;
                 },
             );
@@ -117,7 +119,7 @@ function Chat() {
                 queryClient.setQueryData(
                     infiniteMessagesQueryKey,
                     (prevData: InfiniteQueryData) => {
-                        let messageToUpdate = prevData.pages[0].items.find(
+                        let messageToUpdate = prevData.pages[0]?.items.find(
                             (m) => m.id === data.id,
                         );
                         if (!messageToUpdate) {
