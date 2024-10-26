@@ -1,7 +1,7 @@
-import { DBChatMessageSchema } from '@/lib/db';
 import { Redis } from '@upstash/redis';
 import { Redis as ioRedis } from 'ioRedis';
 import z from 'zod';
+import { DBChatMessageSchema } from './db';
 
 const redis = Redis.fromEnv();
 const ioredis = new ioRedis(process.env.UPSTASH_REDIS_URL as string);

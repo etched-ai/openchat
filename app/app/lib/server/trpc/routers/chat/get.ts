@@ -1,4 +1,4 @@
-import { type DBChat, DBChatSchema } from '@/lib/db';
+import { type DBChat, DBChatSchema } from '@/lib/server/db';
 import { sql } from 'slonik';
 import { z } from 'zod';
 import { publicProcedure } from '../../trpc';

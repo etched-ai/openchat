@@ -1,8 +1,8 @@
 // Creates a DB chat and streams down the response. Chats can only be created from the home page.
 
-import type { IAIService } from '@/lib/AIService/AIService.interface';
-import { type DBChat, type DBChatMessage, DBChatSchema } from '@/lib/db';
-import { upsertDBChatMessage } from '@/lib/sql';
+import type { IAIService } from '@/lib/server/AIService/AIService.interface';
+import { type DBChat, type DBChatMessage, DBChatSchema } from '@/lib/server/db';
+import { upsertDBChatMessage } from '@/lib/server/sql';
 import { type DatabasePool, sql } from 'slonik';
 import { ulid } from 'ulid';
 import { z } from 'zod';
