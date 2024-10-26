@@ -1,9 +1,16 @@
-import { publicProcedure, router } from '../../trpc';
+import { router } from '../../trpc';
+import { create } from './create';
+import { get } from './get';
+import { infiniteList } from './infiniteList';
+import { infiniteListMessages } from './infiniteListMessages';
+import { listenNewMessages } from './listenNewMessages';
+import { sendMessage } from './sendMessage';
 
 export const chatRouter = router({
-    test: publicProcedure.query(({ ctx }) => {
-        return {
-            test: 'HI',
-        };
-    }),
+    get,
+    create,
+    infiniteList,
+    infiniteListMessages,
+    listenNewMessages,
+    sendMessage,
 });

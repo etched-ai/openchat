@@ -1,4 +1,14 @@
+import { type DatabasePool, createPool } from 'slonik';
 import { z } from 'zod';
+
+const POSTGRES_URL = process.env.POSTGRES_URL as string;
+let pool: DatabasePool | null = null;
+export async function getDbPool() {
+    if (pool) return pool;
+    console.log('yeet', POSTGRES_URL);
+    pool = await createPool(POSTGRES_URL);
+    return pool;
+}
 
 const preprocessedDate = z.preprocess((arg) => {
     if (

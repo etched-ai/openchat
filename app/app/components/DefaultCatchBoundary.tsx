@@ -1,7 +1,7 @@
 import {
-    type ErrorComponent,
+    ErrorComponent,
     type ErrorComponentProps,
-    type Link,
+    Link,
     rootRouteId,
     useMatch,
     useRouter,
@@ -21,7 +21,7 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
             <ErrorComponent error={error} />
             <div className="flex gap-2 items-center flex-wrap">
                 <button
-                    type={''}
+                    type={'button'}
                     onClick={() => {
                         router.invalidate();
                     }}

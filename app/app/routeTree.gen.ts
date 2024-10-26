@@ -12,12 +12,19 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as CChatIDImport } from './routes/c/$chatID'
 
 // Create/Update Routes
 
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CChatIDRoute = CChatIDImport.update({
+  id: '/c/$chatID',
+  path: '/c/$chatID',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -32,6 +39,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/c/$chatID': {
+      id: '/c/$chatID'
+      path: '/c/$chatID'
+      fullPath: '/c/$chatID'
+      preLoaderRoute: typeof CChatIDImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -39,32 +53,37 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/c/$chatID': typeof CChatIDRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/c/$chatID': typeof CChatIDRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/c/$chatID': typeof CChatIDRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/c/$chatID'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/c/$chatID'
+  id: '__root__' | '/' | '/c/$chatID'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CChatIDRoute: typeof CChatIDRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CChatIDRoute: CChatIDRoute,
 }
 
 export const routeTree = rootRoute
@@ -79,11 +98,15 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/"
+        "/",
+        "/c/$chatID"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/c/$chatID": {
+      "filePath": "c/$chatID.tsx"
     }
   }
 }

@@ -1,9 +1,8 @@
 import InputBox from '@/components/InputBox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
-import type { AsyncGeneratorYieldType } from '@/lib/utils';
-import type { Session } from '@supabase/supabase-js';
+import { getSupabaseClient, getSupabaseServerClient } from '@/lib/supabase';
+import type { Session, User } from '@supabase/supabase-js';
 import {
     createFileRoute,
     useRouteContext,
@@ -13,7 +12,7 @@ import {
 import { getQueryKey } from '@trpc/react-query';
 import { XCircle } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 
 const searchSchema = z.object({
@@ -24,7 +23,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/')({
     validateSearch: searchSchema,
-    beforeLoad(ctx) {
+    async beforeLoad(ctx) {
         if (
             ctx.search.error &&
             ctx.search.error_code === 422 &&
@@ -42,11 +41,11 @@ export const Route = createFileRoute('/')({
     component: Index,
 });
 
-function maybeGetName(session: Session | null): null | string {
-    if (!session) return null;
+function maybeGetName(user: User | null): null | string {
+    if (!user) return null;
     const name =
-        session.user.identities?.[0]?.identity_data?.full_name ||
-        session.user.identities?.[0]?.identity_data?.full_name;
+        user.identities?.[0]?.identity_data?.full_name ||
+        user.identities?.[0]?.identity_data?.full_name;
     if (!name) return null;
     const nameParts = name.split(' ');
     if (nameParts.length === 1) {
@@ -55,25 +54,27 @@ function maybeGetName(session: Session | null): null | string {
     return nameParts.slice(0, -1).join(' ');
 }
 
+const getGreeting = () => {
+    const hour = DateTime.local().hour;
+    if (hour < 12) {
+        return 'morning';
+    } else if (hour < 18) {
+        return 'afternoon';
+    } else {
+        return 'evening';
+    }
+};
+
 function Index() {
     const router = useRouter();
-    const { session, needsRegularLogin, trpc, queryClient } = useRouteContext({
+    const { user, needsRegularLogin, trpc, queryClient } = useRouteContext({
         from: '/',
     });
-    const name = maybeGetName(session);
+    const supabase = useMemo(() => getSupabaseServerClient(), []);
+
+    const name = maybeGetName(user);
 
     const createChatMutation = trpc.chat.create.useMutation();
-
-    const getGreeting = () => {
-        const hour = DateTime.local().hour;
-        if (hour < 12) {
-            return 'morning';
-        } else if (hour < 18) {
-            return 'afternoon';
-        } else {
-            return 'evening';
-        }
-    };
 
     const handleSubmit = async (text: string): void => {
         // Create the chat and send the first message
@@ -93,37 +94,37 @@ function Index() {
         });
     };
 
-    const handleLogin = async (): Promise<void> => {
-        // Try to link the identity
-        const linkResult = await supabase.auth.linkIdentity({
-            provider: 'google',
-        });
-        if (linkResult.error) {
-            console.error('FAILED LINK', linkResult.error);
-        }
-        console.log('LINK SUCCESS', linkResult.data);
-    };
+    // const handleLogin = async (): Promise<void> => {
+    //     // Try to link the identity
+    //     const linkResult = await supabase.auth.linkIdentity({
+    //         provider: 'google',
+    //     });
+    //     if (linkResult.error) {
+    //         console.error('FAILED LINK', linkResult.error);
+    //     }
+    //     console.log('LINK SUCCESS', linkResult.data);
+    // };
 
-    useEffect(() => {
-        if (needsRegularLogin) {
-            // If we failed to link the identity because the user already has an account
-            // then automatically try logging in. It's a bit weird but for now this is just
-            // how supabase works. I also wish there was a way to do it without the page
-            // redirects in between.
-            // TODO: I think this will infinite loop during the login process if either the link
-            // fails
-            (async () => {
-                const loginResult = await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                });
-                if (loginResult.error) {
-                    console.error('FAILED LOGIN', loginResult);
-                    return;
-                }
-                console.log('LOGIN SUCCESS', loginResult.data);
-            })();
-        }
-    }, [needsRegularLogin]);
+    // useEffect(() => {
+    //     if (needsRegularLogin) {
+    //         // If we failed to link the identity because the user already has an account
+    //         // then automatically try logging in. It's a bit weird but for now this is just
+    //         // how supabase works. I also wish there was a way to do it without the page
+    //         // redirects in between.
+    //         // TODO: I think this will infinite loop during the login process if either the link
+    //         // fails
+    //         (async () => {
+    //             const loginResult = await supabase.auth.signInWithOAuth({
+    //                 provider: 'google',
+    //             });
+    //             if (loginResult.error) {
+    //                 console.error('FAILED LOGIN', loginResult);
+    //                 return;
+    //             }
+    //             console.log('LOGIN SUCCESS', loginResult.data);
+    //         })();
+    //     }
+    // }, [needsRegularLogin, supabase]);
 
     return (
         <div className="w-full h-full justify-center items-center flex flex-col p-2">
@@ -138,8 +139,9 @@ function Index() {
                     placeholderText="How can Charlie help you today?"
                 />
             </div>
-            {(!session || session.user.is_anonymous) && (
-                <Button onClick={handleLogin} className="w-72 mt-6">
+            {(!user || user.is_anonymous) && (
+                // <Button onClick={handleLogin} className="w-72 mt-6">
+                <Button onClick={() => {}} className="w-72 mt-6">
                     Log in with Google
                 </Button>
             )}

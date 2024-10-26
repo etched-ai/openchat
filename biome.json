@@ -2,10 +2,9 @@
     "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
     "files": {
         "ignore": [
-            "apps/ui/src/routeTree.gen.ts",
-            "apps/ui/tsconfig*.json",
             "app/app/routeTree.gen.ts",
-            "app/tailwind.config.js"
+            "app/tailwind.config.js",
+            "**/node_modules"
         ]
     },
     "organizeImports": {
