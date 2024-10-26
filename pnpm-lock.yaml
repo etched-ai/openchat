@@ -167,14 +167,6 @@ importers:
 
   infra/supabase: {}
 
-  packages/db:
-    dependencies:
-      zod:
-        specifier: ^3.23.8
-        version: 3.23.8
-
-  packages/tsconfig: {}
-
 packages:
 
   '@alloc/quick-lru@5.2.0':
