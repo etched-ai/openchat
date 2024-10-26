@@ -1,9 +1,9 @@
-import { type DBChatMessage, DBChatMessageSchema } from '@/lib/db';
+import { type DBChatMessage, DBChatMessageSchema } from '@/lib/server/db';
 import {
     getRedisSubscriber,
     subscriptionChannelTypes,
     subscriptionChannels,
-} from '@/lib/redis';
+} from '@/lib/server/redis';
 import { tracked } from '@trpc/server';
 import { type DatabasePool, sql } from 'slonik';
 import { z } from 'zod';

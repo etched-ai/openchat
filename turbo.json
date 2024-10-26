@@ -9,6 +9,9 @@
         "lint": {
             "dependsOn": ["^lint"]
         },
+        "ci": {
+            "dependsOn": ["^ci"]
+        },
         "dev": {
             "cache": false,
             "persistent": true

@@ -1,7 +1,3 @@
-import InputBox from '@/components/InputBox';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { getSupabaseServerClient } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import {
     createFileRoute,
@@ -11,10 +7,16 @@ import {
 } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/start';
 import { getQueryKey } from '@trpc/react-query';
-import { XCircle } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
+
+import { getSupabaseServerClient } from '@/lib/server/supabase';
+
+import InputBox from '@/components/InputBox';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { XCircle } from 'lucide-react';
 
 const searchSchema = z.object({
     error: z.string().optional(),

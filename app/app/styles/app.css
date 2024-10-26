@@ -2,19 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "TTInterphases Pro";
+  src: url("/app/app/assets/fonts/TTInterphasesPro-Rg.ttf") format("ttf");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: "TTInterphases Pro Mono";
+  src: url("/app/app/assets/fonts/TTInterphasesProMono-Rg.ttf") format("ttf");
+  font-weight: normal;
+  font-style: normal;
+}
+
 @layer base {
   :root {
-    --background: 253 246 227;
-    --foreground: 7 54 66;
-    --card: 252 243 227;
-    --card-foreground: 7 36 66;
-    --popover: 252 243 227;
+    --background: 255 255 255;
+    --foreground: 45 45 45;
+    --card: 213 213 213;
+    --card-foreground: 45 45 45;
+    --popover: 253 235 255;
     --popover-foreground: 7 36 66;
-    --primary: 108 113 196;
+    --primary: 242 174 64;
     --primary-foreground: 240 240 240;
-    --secondary: 238 232 213;
+    --secondary: 243 243 243;
     --secondary-foreground: 127 141 141;
-    --muted: 238 232 213;
+    --muted: 233 233 233;
     --muted-foreground: 127 141 141;
     --accent: 230 229 221;
     --accent-foreground: 7 54 66;
@@ -68,7 +81,7 @@
   }
   body {
     @apply bg-background text-foreground w-full h-full;
-    font-family: "Jetbrains Mono", system-ui, sans-serif;
+    font-family: "TTInterphases Pro", system-ui, sans-serif;
   }
   #root {
     @apply w-full h-full;
@@ -79,7 +92,7 @@
   @apply outline-none !important;
 
   .cm-scroller {
-    font-family: "Jetbrains Mono", system-ui, sans-serif !important;
+    font-family: "TTInterphases Pro Mono", system-ui, sans-serif !important;
   }
 }
 

@@ -1,8 +1,10 @@
-import UserIcon from '@/components/ui/userIcon';
-import type { DBChatMessage } from '@/lib/db';
 import type React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
+import type { DBChatMessage } from '@/lib/server/db';
+
+import UserIcon from '@/components/ui/userIcon';
 
 type MessageProps = {
     message: DBChatMessage;

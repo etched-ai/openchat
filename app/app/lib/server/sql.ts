@@ -1,5 +1,5 @@
-import { type DBChatMessage, DBChatMessageSchema } from '@/lib/db';
 import { type DatabasePool, sql } from 'slonik';
+import { type DBChatMessage, DBChatMessageSchema } from './db';
 
 type StrippedDBChatMessage = Omit<DBChatMessage, 'createdAt' | 'updatedAt'>;
 export async function upsertDBChatMessage(

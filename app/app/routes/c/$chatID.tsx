@@ -1,13 +1,11 @@
-import InputBox from '@/components/InputBox';
-import type { TRPCOutputs } from '@/lib/trpc/router';
-import {
-    createFileRoute,
-    redirect,
-    useLoaderData,
-} from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { getQueryKey } from '@trpc/react-query';
 import { DateTime } from 'luxon';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+
+import type { TRPCOutputs } from '@/lib/server/trpc/router';
+
+import InputBox from '@/components/InputBox';
 import ChatContainer from './-components/chatContainer';
 
 type InfiniteQueryData = {
@@ -15,7 +13,7 @@ type InfiniteQueryData = {
 };
 
 export const Route = createFileRoute('/c/$chatID')({
-    async loader({ context, params }) {
+    async loader({ context }) {
         // If they're not logged in redirect to root to be logged in as anonymouse user
         if (!context.user) {
             throw redirect({

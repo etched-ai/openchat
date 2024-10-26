@@ -1,7 +1,7 @@
-import type { DBChatMessage } from '@/lib/db';
-import redis, { subscriptionChannels } from '@/lib/redis';
-import { getPreviousChatMessages, upsertDBChatMessage } from '@/lib/sql';
-import type { Context } from '@/lib/trpc/context';
+import type { DBChatMessage } from '@/lib/server/db';
+import redis, { subscriptionChannels } from '@/lib/server/redis';
+import { getPreviousChatMessages, upsertDBChatMessage } from '@/lib/server/sql';
+import type { Context } from '@/lib/server/trpc/context';
 import { ulid } from 'ulid';
 import { z } from 'zod';
 import { publicProcedure } from '../../trpc';

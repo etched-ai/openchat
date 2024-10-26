@@ -1,5 +1,6 @@
-import { getSupabaseServerClient } from '@/lib/supabase';
 import { createAPIFileRoute } from '@tanstack/start/api';
+
+import { getSupabaseServerClient } from '@/lib/server/supabase';
 
 export const Route = createAPIFileRoute('/api/auth/callback')({
     GET: async ({ request }) => {

@@ -1,6 +1,6 @@
 // Cursor paginated chat message querying: https://trpc.io/docs/client/react/useInfiniteQuery
 
-import { type DBChatMessage, DBChatMessageSchema } from '@/lib/db';
+import { type DBChatMessage, DBChatMessageSchema } from '@/lib/server/db';
 import { TRPCError } from '@trpc/server';
 import { sql } from 'slonik';
 import { z } from 'zod';

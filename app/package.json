@@ -8,7 +8,9 @@
         "dev": "source .env && vinxi dev",
         "build": "vinxi build",
         "start": "vinxi start",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "lint": "biome check .",
+        "test": "pnpm build",
+        "ci": "pnpm test && pnpm lint"
     },
     "keywords": [],
     "author": "",
