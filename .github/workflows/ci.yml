@@ -30,4 +30,4 @@ jobs:
           pnpm install
 
       - name: Run CI
-        run: pnpm run CI
+        run: pnpm run ci
