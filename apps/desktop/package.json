@@ -24,7 +24,13 @@
         "@electron-toolkit/preload": "^3.0.1",
         "@electron-toolkit/tsconfig": "^1.0.1",
         "@electron-toolkit/utils": "^3.0.0",
-        "electron-updater": "^6.1.7"
+        "@radix-ui/react-slot": "^1.1.0",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.1.1",
+        "electron-updater": "^6.1.7",
+        "lucide-react": "^0.454.0",
+        "tailwind-merge": "^2.5.4",
+        "tailwindcss-animate": "^1.0.7"
     },
     "devDependencies": {
         "@repo/tsconfig": "workspace:*",
@@ -32,11 +38,14 @@
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
         "@vitejs/plugin-react": "^4.3.1",
+        "autoprefixer": "^10.4.20",
         "electron": "^31.0.2",
         "electron-builder": "^24.13.3",
         "electron-vite": "^2.3.0",
+        "postcss": "^8.4.47",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
+        "tailwindcss": "^3.4.14",
         "typescript": "^5.5.2",
         "vite": "^5.3.1"
     }
