@@ -25,6 +25,7 @@
         "@electron-toolkit/tsconfig": "^1.0.1",
         "@electron-toolkit/utils": "^3.0.0",
         "@radix-ui/react-slot": "^1.1.0",
+        "@tanstack/react-router": "^1.77.8",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",
         "electron-updater": "^6.1.7",
@@ -34,6 +35,8 @@
     },
     "devDependencies": {
         "@repo/tsconfig": "workspace:*",
+        "@tanstack/router-devtools": "^1.77.8",
+        "@tanstack/router-plugin": "^1.77.7",
         "@types/node": "^20.14.8",
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
