@@ -1,7 +1,27 @@
+/// <reference types="vite/client" />
+
 import { join } from 'node:path';
 import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import { BrowserWindow, app, ipcMain, shell } from 'electron';
 import icon from '../../resources/icon.png?asset';
+import createServer from '../server/index.js';
+
+let server: ReturnType<typeof createServer> | null = null;
+
+async function startServer() {
+    if (!server) {
+        server = createServer();
+        await server.listen({ port: 8543 });
+        console.log('Server running on port 8543');
+    }
+}
+
+async function stopServer() {
+    if (server) {
+        await server.close();
+        server = null;
+    }
+}
 
 function createWindow(): void {
     // Create the browser window.
@@ -34,11 +54,13 @@ function createWindow(): void {
         mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
     }
 }
-
+//
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+    await startServer();
+
     // Set app user model id for windows
     electronApp.setAppUserModelId('com.electron');
 
@@ -64,7 +86,8 @@ app.whenReady().then(() => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
+    await stopServer();
     if (process.platform !== 'darwin') {
         app.quit();
     }
@@ -72,3 +95,18 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
+if (import.meta.hot) {
+    import.meta.hot.on('vite:beforeUpdate', async (payload) => {
+        console.log('DID RELOAD', payload.updates);
+        if (payload.updates.some((update) => update.path.includes('server/'))) {
+            console.info('Server files changed, restarting server...');
+            await stopServer();
+        }
+    });
+
+    import.meta.hot.on('vite:afterUpdate', async (payload) => {
+        if (payload.updates.some((update) => update.path.includes('server/'))) {
+            await startServer();
+        }
+    });
+}
