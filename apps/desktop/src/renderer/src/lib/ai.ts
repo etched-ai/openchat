@@ -126,8 +126,16 @@ export async function sendChatMessage(
         },
     });
 
-    const s = new ProgramState();
-    await s.setModel(import.meta.env.VITE_DEFAULT_MODEL_URL ?? '');
+    // const s = new ProgramState();
+    // await s.setModel(import.meta.env.VITE_DEFAULT_MODEL_URL ?? '');
+    const s = new ProgramState(
+        new OpenAIBackend({
+            apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+            dangerouslyAllowBrowser: true,
+        }),
+    );
+    s.setModel('gpt-4o-mini');
+
     s.add(s.system`${getDefaultSystemPrompt()}`);
     for (const message of prevMessages) {
         s.add(
@@ -158,7 +166,7 @@ export async function sendChatMessage(
     }
 }
 
-export async function updatePreviewMessage(
+export async function updateChatPreview(
     replicache: Replicache<M>,
     chatID: string,
 ) {
@@ -172,8 +180,16 @@ export async function updatePreviewMessage(
                 .values()
                 .toArray(),
     );
-    const s = new ProgramState();
-    await s.setModel(import.meta.env.VITE_DEFAULT_MODEL_URL ?? '');
+    // const s = new ProgramState();
+    // await s.setModel(import.meta.env.VITE_DEFAULT_MODEL_URL ?? '');
+    const s = new ProgramState(
+        new OpenAIBackend({
+            apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+            dangerouslyAllowBrowser: true,
+        }),
+    );
+    s.setModel('gpt-4o-mini');
+
     const generator = s
         .add(s.user`Summarize the contents of this conversation `)
         .add(s.user`into a single phrase that describes the main idea `)
@@ -189,9 +205,11 @@ export async function updatePreviewMessage(
     let fullResponse = '';
     for await (const chunk of generator) {
         fullResponse += chunk.content;
+        console.log('CHAT PREVIEW', fullResponse);
         await replicache.mutate.upsertChat({
             chatID,
             chat: {
+                id: chatID,
                 previewName: fullResponse,
             },
         });

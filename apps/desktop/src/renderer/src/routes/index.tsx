@@ -9,7 +9,7 @@ import {
     createChat,
     getDefaultSystemPrompt,
     sendChatMessage,
-    updatePreviewMessage,
+    updateChatPreview,
 } from '@renderer/lib/ai';
 import type { M } from '@renderer/lib/replicache/mutators';
 import type { User } from '@supabase/supabase-js';
@@ -72,7 +72,7 @@ function Index() {
             newChat.id,
             [],
             message,
-        ).then(() => updatePreviewMessage(replicache, newChat.id));
+        ).then(() => updateChatPreview(replicache, newChat.id));
         navigate({ to: '/c/$chatID', params: { chatID: newChat.id } });
     };
 
