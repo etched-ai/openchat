@@ -1,9 +1,9 @@
-import type { WriteTransaction } from 'replicache';
+import upsertChat from './upsertChat.js';
+import upsertChatMessage from './upsertChatMessage.js';
 
 export type M = typeof mutators;
 
 export const mutators = {
-    test: async (tx: WriteTransaction, _args: unknown) => {
-        await tx.set('test', 'hello world');
-    },
+    upsertChat,
+    upsertChatMessage,
 };

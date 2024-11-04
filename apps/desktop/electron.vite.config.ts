@@ -2,9 +2,15 @@ import { resolve } from 'node:path';
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 export default defineConfig({
     main: {
+        resolve: {
+            alias: {
+                '@preload': resolve('src/preload'),
+            },
+        },
         plugins: [externalizeDepsPlugin()],
         build: {
             watch: {
@@ -25,8 +31,9 @@ export default defineConfig({
         resolve: {
             alias: {
                 '@renderer': resolve('src/renderer/src'),
+                '@preload': resolve('src/preload'),
             },
         },
-        plugins: [react()],
+        plugins: [react(), nodePolyfills()],
     },
 });

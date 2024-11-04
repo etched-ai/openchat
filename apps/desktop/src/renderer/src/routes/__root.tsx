@@ -1,3 +1,4 @@
+import type { ReplicacheChat } from '@preload/shared';
 import LogoBlack from '@renderer/assets/logo-black.svg';
 import { Button } from '@renderer/components/ui/button.js';
 import {
@@ -21,8 +22,10 @@ import {
 } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { ChevronLeft, ChevronRight, SquarePlus } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 import type { Replicache } from 'replicache';
+import { useSubscribe } from 'replicache-react';
 
 export interface RouterContext {
     session: Session | null;
@@ -41,6 +44,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
             session = getSessionData.session;
         }
 
+        console.log('SESSION', session);
         let replicache: Replicache<M> | null = null;
 
         if (session) {
@@ -64,11 +68,28 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootLayout({ children }: { children: React.ReactNode }) {
-    const { session } = Route.useRouteContext();
+    const { session, replicache } = Route.useRouteContext();
 
     const navigate = useNavigate();
 
-    const chats: { id: string; previewName: string }[] = [];
+    const chats = useSubscribe(
+        replicache,
+        async (tx) =>
+            (
+                await tx
+                    .scan<ReplicacheChat>({
+                        prefix: 'chat/',
+                    })
+                    .values()
+                    .toArray()
+            ).sort(
+                (a, b) =>
+                    DateTime.fromISO(b.createdAt).toMillis() -
+                    DateTime.fromISO(a.createdAt).toMillis(),
+            ),
+        { default: [] },
+    );
+    console.log('CHATS', chats);
 
     const [sidebarIsOpen, setSidebarIsOpen] = useState(false);
     const toggleSidebarOpen = () => setSidebarIsOpen((prev) => !prev);

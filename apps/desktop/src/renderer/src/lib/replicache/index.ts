@@ -13,7 +13,7 @@ type Params = {
     DEBUG_MODE?: boolean;
 };
 
-const BASE_URL = 'http://localhost:8325';
+const BASE_URL = 'http://localhost:8543';
 
 export const getReplicache = (params: Params): Replicache<M> => {
     const rep = new Replicache<M>({
@@ -25,6 +25,12 @@ export const getReplicache = (params: Params): Replicache<M> => {
         logLevel: params.DEBUG_MODE ? 'debug' : 'error',
         schemaVersion: 'v1',
         auth: params.auth,
+        indexes: {
+            chatID: {
+                prefix: 'chatMessage/',
+                jsonPointer: '/chatID',
+            },
+        },
     });
     // TODO: https://lucia-auth.com/sessions/basic-api/sqlite
     rep.getAuth = async () => {
