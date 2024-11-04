@@ -3,6 +3,7 @@
     "files": {
         "ignore": [
             "apps/desktop/src/renderer/src/routeTree.gen.ts",
+            "./src/renderer/src/routeTree.gen.ts",
             "apps/desktop/tailwind.config.js",
             "apps/desktop/out",
             "apps/desktop/dist",
