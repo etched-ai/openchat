@@ -6,7 +6,7 @@
             "apps/desktop/tailwind.config.js",
             "apps/desktop/out",
             "apps/desktop/dist",
-            "apps/desktop/node_modules"
+            "**/node_modules"
         ]
     },
     "organizeImports": {
