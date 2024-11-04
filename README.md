@@ -4,14 +4,14 @@ This is the monorepo for Etched's AI chat platform. Connect it to any open-sourc
 ## Repo Structure
 This is a [turborepo](https://turbo.build/repo/docs) managed monorepo. Read up on it if you have never heard of it before.
 
-There are two main components: `app/` and `infra/`.
+There are two main components: `apps/` and `infra/`.
 
-`app/` is the application built with Tanstack start.
+`apps/` is the application built with electron-vite.
 
 `infra/` is for any infrastructure, like the local supabase setup.
 
 ## Development
-First set up your `.env` files. You will need them in `app/.env` and `infra/.env`. Follow the `.env.sample` files in each of them.
+First set up your `.env` files. You will need them in `apps/desktop/.env` and `infra/.env`. Follow the `.env.sample` files in each of them.
 
 For Google OAuth, follow [these steps](https://supabase.com/docs/guides/auth/social-login/auth-google) to create a Google OAuth client. Then, for local development go to the Credentials page and edit your OAuth client. Add `http://localhost:54321/auth/v1/callback` to the Authorized redirect URIs.
 
