@@ -1,6 +1,6 @@
 import type { Transaction } from '@libsql/client/.';
 import { z } from 'zod';
-import { DBChatMessage, DBChatMessageSchema, DBChatSchema } from '../db.js';
+import { DBChatMessageSchema, DBChatSchema } from '../db.js';
 import { SearchResultSchema } from './replicache.js';
 
 // In the future when we start doing partial remote server syncs this

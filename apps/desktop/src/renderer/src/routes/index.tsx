@@ -7,19 +7,14 @@ import {
 import { Button } from '@renderer/components/ui/button';
 import {
     createChat,
-    getDefaultSystemPrompt,
     sendChatMessage,
     updateChatPreview,
 } from '@renderer/lib/ai';
-import type { M } from '@renderer/lib/replicache/mutators';
 import type { User } from '@supabase/supabase-js';
 import { createFileRoute, useSearch } from '@tanstack/react-router';
-import ProgramState, { OpenAIBackend } from 'enochian-js';
 import { XCircle } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
-import type { ReadTransaction, Replicache } from 'replicache';
-import { ulid } from 'ulid';
 import { z } from 'zod';
 
 const searchSchema = z.object({

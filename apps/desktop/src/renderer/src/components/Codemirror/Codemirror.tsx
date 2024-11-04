@@ -73,6 +73,7 @@ const CodeMirrorEditor = forwardRef<CodemirrorEditorRef, Props>(
                 parent: editorRef.current,
             });
 
+            // @ts-expect-error TODO: need to edit this file a lot
             viewRef.current = view;
 
             return () => {

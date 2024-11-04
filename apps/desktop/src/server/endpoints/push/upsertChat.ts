@@ -2,10 +2,11 @@ import type { Transaction } from '@libsql/client/.';
 import type { UpsertChatArgs } from '@preload/shared';
 import { DateTime } from 'luxon';
 import type { Affected } from '.';
-import db, { type DBChat, DBChatSchema } from '../../db';
+import { type DBChat, DBChatSchema } from '../../db';
 
 export async function upsertChat(
     tx: Transaction,
+    // @ts-ignore
     userID: string,
     args: UpsertChatArgs,
 ): Promise<Affected> {

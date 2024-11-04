@@ -6,6 +6,7 @@ import type { Affected } from '.';
 
 export async function upsertChatMessage(
     tx: Transaction,
+    // @ts-ignore
     userID: string,
     args: UpsertChatMessageArgs,
 ): Promise<Affected> {
@@ -48,7 +49,7 @@ export async function upsertChatMessage(
             );
         }
 
-        const result = await tx.execute({
+        await tx.execute({
             sql: `
                 INSERT INTO ChatMessage (
                     id,
