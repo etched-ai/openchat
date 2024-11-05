@@ -22,6 +22,10 @@
         "ci": "pnpm check-format"
     },
     "dependencies": {
+        "@codemirror/commands": "^6.7.1",
+        "@codemirror/lang-markdown": "^6.3.0",
+        "@codemirror/state": "^6.4.1",
+        "@codemirror/view": "^6.34.1",
         "@electron-toolkit/preload": "^3.0.1",
         "@electron-toolkit/tsconfig": "^1.0.1",
         "@electron-toolkit/utils": "^3.0.0",
@@ -39,6 +43,8 @@
         "fastify": "^5.0.0",
         "lucide-react": "^0.454.0",
         "luxon": "^3.5.0",
+        "react-markdown": "^9.0.1",
+        "remark-gfm": "^4.0.0",
         "replicache": "^15.0.1",
         "replicache-react": "^5.0.1",
         "tailwind-merge": "^2.5.4",
