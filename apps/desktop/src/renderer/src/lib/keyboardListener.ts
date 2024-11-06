@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ulid } from 'ulid';
 
 type Shortcut = {
@@ -73,3 +74,24 @@ export function cleanup() {
         isInitialized = false;
     }
 }
+
+export const useKeyboardListener = (commands: Omit<Command, 'id'>[]) => {
+    useEffect(() => {
+        const commandIDs: string[] = [];
+
+        for (const command of commands) {
+            const commandID = registerCommand(
+                command.shortcut,
+                command.callback,
+            );
+            commandIDs.push(commandID);
+        }
+
+        init();
+
+        return () => {
+            for (const commandID of commandIDs) unregisterCommand(commandID);
+            cleanup();
+        };
+    }, [commands]);
+};

@@ -8,7 +8,7 @@ import {
     TooltipTrigger,
 } from '@renderer/components/ui/tooltip.js';
 import UserIcon from '@renderer/components/ui/userIcon.js';
-import * as KeyboardListener from '@renderer/lib/keyboardListener.js';
+import { useKeyboardListener } from '@renderer/lib/keyboardListener.js';
 import { getReplicache } from '@renderer/lib/replicache/index.js';
 import type { M } from '@renderer/lib/replicache/mutators/index.js';
 import { supabase } from '@renderer/lib/supabase';
@@ -23,7 +23,7 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { ChevronLeft, ChevronRight, SquarePlus } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Replicache } from 'replicache';
 import { useSubscribe } from 'replicache-react';
 
@@ -89,30 +89,32 @@ function RootLayout({ children }: { children: React.ReactNode }) {
             ),
         { default: [] },
     );
-    console.log('CHATS', chats);
 
     const [sidebarIsOpen, setSidebarIsOpen] = useState(false);
     const toggleSidebarOpen = () => setSidebarIsOpen((prev) => !prev);
 
-    useEffect(() => {
-        const toggleSidebarCmdId = KeyboardListener.registerCommand(
-            { key: 'b', metaKey: true },
-            () => {
-                setSidebarIsOpen((prev) => !prev);
-            },
-        );
-        const newChatCmdId = KeyboardListener.registerCommand(
-            { key: 'k', metaKey: true },
-            () => navigate({ to: '/' }),
-        );
-        KeyboardListener.init();
+    useKeyboardListener(
+        useMemo(
+            () => [
+                {
+                    shortcut: { key: 'b', metaKey: true },
+                    callback: () => {
+                        setSidebarIsOpen((prev) => !prev);
+                    },
+                },
+                {
+                    shortcut: { key: 'k', metaKey: true },
+                    callback: () => navigate({ to: '/' }),
+                },
+            ],
+            [navigate],
+        ),
+    );
 
-        return () => {
-            KeyboardListener.unregisterCommand(toggleSidebarCmdId);
-            KeyboardListener.unregisterCommand(newChatCmdId);
-            KeyboardListener.cleanup();
-        };
-    }, [navigate]);
+    const [logoOpacity, handleScroll] = useScrollFade({
+        fadeStart: 0,
+        fadeEnd: 12,
+    });
 
     return (
         <div className="flex flex-row w-full h-full">
@@ -120,7 +122,8 @@ function RootLayout({ children }: { children: React.ReactNode }) {
                 <img
                     src={LogoBlack}
                     alt="Logo"
-                    className="w-6 h-6 absolute top-2 left-4 z-50"
+                    className="w-6 h-6 absolute top-2 left-4 z-50 transition-opacity duration-200 ease-in-out"
+                    style={{ opacity: sidebarIsOpen ? logoOpacity : 1 }}
                 />
             </Link>
             <TooltipProvider>
@@ -143,9 +146,10 @@ function RootLayout({ children }: { children: React.ReactNode }) {
                 className="w-6 h-6 absolute bottom-4 left-4 z-50"
             />
             <div
-                className={`z-10 absolute left-0 h-full bg-secondary transition-all duration-200 ease-in-out flex flex-col overflow-x-hidden ${
-                    sidebarIsOpen ? 'w-64' : 'w-0'
+                className={`z-10 absolute left-0 h-full pb-8 bg-secondary transition-all duration-200 ease-in-out flex flex-col overflow-x-hidden ${
+                    sidebarIsOpen ? 'w-48' : 'w-0'
                 }`}
+                onScroll={handleScroll}
             >
                 {sidebarIsOpen && (
                     <div className="p-4">
@@ -196,7 +200,7 @@ function RootLayout({ children }: { children: React.ReactNode }) {
                             variant="ghost"
                             size="default"
                             className={`fixed top-1/2 -translate-y-1/2 transition-all duration-200 ease-in-out px-2 py-2 ${
-                                sidebarIsOpen ? 'left-[16.5rem]' : 'left-2'
+                                sidebarIsOpen ? 'left-[12.5rem]' : 'left-2'
                             }`}
                             onClick={toggleSidebarOpen}
                             aria-label={
@@ -218,4 +222,27 @@ function RootLayout({ children }: { children: React.ReactNode }) {
             <div className="flex flex-1">{children}</div>
         </div>
     );
+}
+
+function useScrollFade(opts: { fadeStart: number; fadeEnd: number }) {
+    const [opacity, setOpacity] = useState(1);
+
+    const handleScroll: React.UIEventHandler<HTMLDivElement> = (e) => {
+        const container = e.target;
+        // @ts-ignore It's tripping
+        const scrollTop = container.scrollTop as number;
+
+        const newOpacity = Math.max(
+            0,
+            Math.min(
+                1,
+                1 -
+                    (scrollTop - opts.fadeStart) /
+                        (opts.fadeEnd - opts.fadeStart),
+            ),
+        );
+        setOpacity(newOpacity);
+    };
+
+    return [opacity, handleScroll] as const;
 }
