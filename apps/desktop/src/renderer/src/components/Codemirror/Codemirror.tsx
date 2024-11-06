@@ -65,6 +65,7 @@ const CodeMirrorEditor = forwardRef<CodemirrorEditorRef, Props>(
                             onChange(update.state.doc.toString());
                         }
                     }),
+                    EditorView.lineWrapping,
                 ],
             });
 
@@ -81,7 +82,9 @@ const CodeMirrorEditor = forwardRef<CodemirrorEditorRef, Props>(
             };
         }, [initialValue, placeholderText, onChange]);
 
-        return <div ref={editorRef} className="w-full h-full p-0 m-0" />;
+        return (
+            <div ref={editorRef} className="w-full max-w-full h-full p-0 m-0" />
+        );
     },
 );
 
