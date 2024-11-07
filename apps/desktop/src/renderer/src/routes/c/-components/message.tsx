@@ -35,7 +35,7 @@ export const UserMessage: React.FC<UserMessageProps> = ({
     userID,
 }) => {
     return (
-        <div className="w-[40vw] p-2 rounded-lg mt-2 mb-2 flex flex-row bg-accent">
+        <div className="w-[50vw] p-2 rounded-lg mt-2 mb-2 flex flex-row bg-accent">
             <div>
                 <UserIcon userID={userID} className="mr-4" />
             </div>
@@ -47,7 +47,7 @@ export const UserMessage: React.FC<UserMessageProps> = ({
 };
 export const AssistantMessage: React.FC<BaseMessageProps> = ({ message }) => {
     return (
-        <div className="w-[40vw] p-3 rounded-lg mt-2 mb-2 flex flex-row bg-muted/85">
+        <div className="w-[50vw] p-3 rounded-lg mt-2 mb-2 flex flex-row bg-muted/85">
             <div className="flex w-full">
                 <MarkdownRenderer content={message} />
             </div>

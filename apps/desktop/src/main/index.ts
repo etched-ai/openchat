@@ -5,6 +5,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import { BrowserWindow, app, ipcMain, shell } from 'electron';
 import icon from '../../resources/icon.png?asset';
 import createServer from '../server/index.js';
+import configManager from './config';
 
 let server: ReturnType<typeof createServer> | null = null;
 
@@ -71,8 +72,13 @@ app.whenReady().then(async () => {
         optimizer.watchWindowShortcuts(window);
     });
 
-    // IPC test
-    ipcMain.on('ping', () => console.log('pong'));
+    ipcMain.handle('readConfig', () => configManager.readConfig());
+    ipcMain.handle('updateConfig', (e, updates) =>
+        configManager.updateConfig(updates),
+    );
+    ipcMain.handle('writeConfig', (e, newConfig) =>
+        configManager.writeConfig(newConfig),
+    );
 
     createWindow();
 
