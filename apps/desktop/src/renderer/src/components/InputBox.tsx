@@ -366,6 +366,7 @@ const ModelSelectorDropdown: React.FC<ModelSelectorDropdownProps> = ({
                         <Input
                             placeholder="API Key"
                             value={openaiApiKey}
+                            // defaultValue={openaiApiKey}
                             onChange={(e) => setOpenAIApiKey(e.target.value)}
                         />
                     </div>
