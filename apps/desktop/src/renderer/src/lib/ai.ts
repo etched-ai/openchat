@@ -1,9 +1,11 @@
 import type { ReplicacheChatMessage } from '@preload/shared';
 import ProgramState, { OpenAIBackend } from 'enochian-js';
 import { DateTime } from 'luxon';
+import type OpenAI from 'openai';
 import type { Replicache } from 'replicache';
 import { ulid } from 'ulid';
 import type { M } from './replicache/mutators';
+import type { AppConfig } from './utils';
 
 export function getDefaultSystemPrompt(): string {
     return `The assistant is Charlie, created by Etched. You are named after the
@@ -88,6 +90,32 @@ Now, let's think step-by-step.`;
 // After ending the thinking stage, Charlie always follows it up with
 // a brief summary and conclusion of the answer to the user's question.
 
+async function getProgramState(): Program<ProgramState> {
+    const config = (await window.electron.ipcRenderer.invoke(
+        'readConfig',
+    )) as AppConfig;
+    let s: ProgramState;
+    if (!config.selectedModel) {
+        throw new Error('No selected model');
+    } else if (config.selectedModel.backend === 'OpenAI') {
+        if (!config.openaiApiKey) {
+            throw new Error('Please set an OpenAI key');
+        }
+        console.log('CREATING OPENAI', config);
+        s = new ProgramState().fromOpenAI({
+            client: {
+                apiKey: config.openaiApiKey,
+                baseURL: config.selectedModel.model.url,
+            },
+            modelName: config.selectedModel.model.name as OpenAI.ChatModel,
+        });
+    } else {
+        console.log('CREATING SGL', config);
+        s = await new ProgramState().fromSGL(config.selectedModel.endpoint.url);
+    }
+    return s;
+}
+
 export async function createChat(replicache: Replicache<M>, userID: string) {
     const chatID = ulid();
 
@@ -126,15 +154,7 @@ export async function sendChatMessage(
         },
     });
 
-    // const s = new ProgramState();
-    // await s.setModel(import.meta.env.VITE_DEFAULT_MODEL_URL ?? '');
-    const s = new ProgramState(
-        new OpenAIBackend({
-            apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-            dangerouslyAllowBrowser: true,
-        }),
-    );
-    s.setModel('gpt-4o-mini');
+    const s = await getProgramState();
 
     s.add(s.system`${getDefaultSystemPrompt()}`);
     for (const message of prevMessages) {
@@ -150,6 +170,7 @@ export async function sendChatMessage(
 
     let fullMessage = '';
     for await (const chunk of generator) {
+        console.log(chunk);
         fullMessage += chunk.content;
         await replicache.mutate.upsertChatMessage({
             chatID,
@@ -180,15 +201,7 @@ export async function updateChatPreview(
                 .values()
                 .toArray(),
     );
-    // const s = new ProgramState();
-    // await s.setModel(import.meta.env.VITE_DEFAULT_MODEL_URL ?? '');
-    const s = new ProgramState(
-        new OpenAIBackend({
-            apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-            dangerouslyAllowBrowser: true,
-        }),
-    );
-    s.setModel('gpt-4o-mini');
+    const s = await getProgramState();
 
     const generator = s
         .add(s.user`Summarize the contents of this conversation `)
