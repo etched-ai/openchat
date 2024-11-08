@@ -44,7 +44,6 @@ export default async function upsertChatMessage(
             ...args.chatMessage,
             updatedAt: new Date().toISOString(), // Update the updatedAt timestamp
         };
-        console.log('UPDATING', updatedMessage);
 
         await tx.set(`chatMessage/${updatedMessage.id}`, updatedMessage);
     }

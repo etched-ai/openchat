@@ -32,7 +32,7 @@ class ConfigManager {
             modelOptions: [
                 {
                     backend: 'OpenAI',
-                    models: [{ name: 'gpt-4o' }, { name: 'gpt-4o-mini' }],
+                    models: [{ name: 'gpt-4o' }],
                 },
                 {
                     backend: 'SGLang',

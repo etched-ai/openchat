@@ -14,9 +14,9 @@ import CodeMirrorEditor, {
 import { Button } from './ui/button';
 import {
     DropdownMenu,
+    DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuGroup,
-    DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
@@ -54,7 +54,7 @@ const InputBox: React.FC<InputBoxProps> = ({
     const setSelectedModel = (
         selectedModel: NonNullable<AppConfig['selectedModel']>,
     ) => {
-        window.electron.ipcRenderer.send('updateConfig', { selectedModel });
+        window.electron.ipcRenderer.invoke('updateConfig', { selectedModel });
         setCurrentConfig((cur) => ({
             ...cur,
             selectedModel,
@@ -72,11 +72,11 @@ const InputBox: React.FC<InputBoxProps> = ({
         } else {
             newConfig.modelOptions[1].endpoints.push(selectedModel.endpoint);
         }
-        window.electron.ipcRenderer.send('writeConfig', newConfig);
+        window.electron.ipcRenderer.invoke('writeConfig', newConfig);
         setCurrentConfig(newConfig);
     };
     const setOpenAIAPIKey = (apiKey: string) => {
-        window.electron.ipcRenderer.send('updateConfig', {
+        window.electron.ipcRenderer.invoke('updateConfig', {
             openaiApiKey: apiKey,
         });
         setCurrentConfig((cur) => ({
@@ -290,18 +290,22 @@ const ModelSelectorDropdown: React.FC<ModelSelectorDropdownProps> = ({
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     {modelOptions[0].models.map((m) => (
-                        <DropdownMenuItem
+                        <DropdownMenuCheckboxItem
                             key={m.name}
-                            onClick={() =>
+                            checked={
+                                selectedModel?.backend === 'OpenAI' &&
+                                selectedModel.model.name === m.name
+                            }
+                            onCheckedChange={() => {
                                 setSelectedModel({
                                     backend: 'OpenAI',
                                     model: m,
-                                })
-                            }
+                                });
+                            }}
                         >
                             {/* @ts-ignore */}
                             {m.name} {m.url ? `(${m.url})` : ''}
-                        </DropdownMenuItem>
+                        </DropdownMenuCheckboxItem>
                     ))}
                     <Button
                         variant={'ghost'}
@@ -375,9 +379,13 @@ const ModelSelectorDropdown: React.FC<ModelSelectorDropdownProps> = ({
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     {modelOptions[1].endpoints.map((e) => (
-                        <DropdownMenuItem
+                        <DropdownMenuCheckboxItem
                             key={e.url}
-                            onClick={() =>
+                            checked={
+                                selectedModel?.backend === 'SGLang' &&
+                                selectedModel.endpoint.url === e.url
+                            }
+                            onCheckedChange={() =>
                                 setSelectedModel({
                                     backend: 'SGLang',
                                     endpoint: e,
@@ -385,7 +393,7 @@ const ModelSelectorDropdown: React.FC<ModelSelectorDropdownProps> = ({
                             }
                         >
                             {e.name} ({e.url})
-                        </DropdownMenuItem>
+                        </DropdownMenuCheckboxItem>
                     ))}
                     <Button
                         variant={'ghost'}

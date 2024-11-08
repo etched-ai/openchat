@@ -90,7 +90,7 @@ Now, let's think step-by-step.`;
 // After ending the thinking stage, Charlie always follows it up with
 // a brief summary and conclusion of the answer to the user's question.
 
-async function getProgramState(): Program<ProgramState> {
+async function getProgramState(): Promise<ProgramState> {
     const config = (await window.electron.ipcRenderer.invoke(
         'readConfig',
     )) as AppConfig;
@@ -101,7 +101,6 @@ async function getProgramState(): Program<ProgramState> {
         if (!config.openaiApiKey) {
             throw new Error('Please set an OpenAI key');
         }
-        console.log('CREATING OPENAI', config);
         s = new ProgramState().fromOpenAI({
             client: {
                 apiKey: config.openaiApiKey,
@@ -110,7 +109,6 @@ async function getProgramState(): Program<ProgramState> {
             modelName: config.selectedModel.model.name as OpenAI.ChatModel,
         });
     } else {
-        console.log('CREATING SGL', config);
         s = await new ProgramState().fromSGL(config.selectedModel.endpoint.url);
     }
     return s;
@@ -141,17 +139,19 @@ export async function sendChatMessage(
     const userMessageID = ulid();
     const assistantMessageID = ulid();
 
+    const userChatMessage: ReplicacheChatMessage = {
+        id: userMessageID,
+        userID,
+        chatID,
+        messageType: 'user',
+        messageContent: newMessage,
+        createdAt: DateTime.now().toISO(),
+        updatedAt: DateTime.now().toISO(),
+    };
+
     await replicache.mutate.upsertChatMessage({
         chatID,
-        chatMessage: {
-            id: userMessageID,
-            userID,
-            chatID,
-            messageType: 'user',
-            messageContent: newMessage,
-            createdAt: DateTime.now().toISO(),
-            updatedAt: DateTime.now().toISO(),
-        },
+        chatMessage: userChatMessage,
     });
 
     const s = await getProgramState();
@@ -168,18 +168,31 @@ export async function sendChatMessage(
         .add(s.user`${newMessage}`)
         .add(s.assistant`${s.gen('response', { stream: true })}`);
 
-    let fullMessage = '';
+    const fullMessage: ReplicacheChatMessage = {
+        id: assistantMessageID,
+        userID,
+        chatID,
+        messageType: 'assistant',
+        messageContent: '',
+        createdAt: DateTime.now().toISO(),
+        updatedAt: DateTime.now().toISO(),
+    };
+
     for await (const chunk of generator) {
-        console.log(chunk);
-        fullMessage += chunk.content;
+        fullMessage.messageContent += chunk.content;
+        fullMessage.updatedAt = DateTime.now().toISO();
+
         await replicache.mutate.upsertChatMessage({
             chatID,
+            // For some reason replicache freezes the `fullMessage`
+            // object if you pass it in like this, so you have to
+            // deep clone it first
             chatMessage: {
                 id: assistantMessageID,
                 userID,
                 chatID,
                 messageType: 'assistant',
-                messageContent: fullMessage,
+                messageContent: fullMessage.messageContent,
                 createdAt: DateTime.now().toISO(),
                 updatedAt: DateTime.now().toISO(),
             },
@@ -218,7 +231,6 @@ export async function updateChatPreview(
     let fullResponse = '';
     for await (const chunk of generator) {
         fullResponse += chunk.content;
-        console.log('CHAT PREVIEW', fullResponse);
         await replicache.mutate.upsertChat({
             chatID,
             chat: {

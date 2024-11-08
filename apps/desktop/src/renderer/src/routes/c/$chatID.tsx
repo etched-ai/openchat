@@ -17,8 +17,8 @@ function Chat() {
 
     const messages = useSubscribe(
         replicache,
-        async (tx) => {
-            const res = (
+        async (tx) =>
+            (
                 await tx
                     .scan<ReplicacheChatMessage>({
                         indexName: 'chatID',
@@ -30,11 +30,10 @@ function Chat() {
                 (a, b) =>
                     DateTime.fromISO(b.createdAt).toMillis() -
                     DateTime.fromISO(a.createdAt).toMillis(),
-            );
-            console.log('SUB RES', res);
-            return res;
+            ),
+        {
+            default: [],
         },
-        { default: [] },
     );
 
     const handleSubmit = async (message: string) => {
