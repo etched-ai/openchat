@@ -93,8 +93,8 @@ importers:
         specifier: ^6.1.7
         version: 6.3.9
       enochian-js:
-        specifier: ^0.0.5
-        version: 0.0.5(@libsql/client@0.14.0)(@types/node@20.17.3)(ioredis@5.4.1)(tailwindcss@3.4.14)(terser@5.36.0)(typescript@5.5.4)(vite@5.4.0(@types/node@20.17.3)(terser@5.36.0))(webpack-sources@3.2.3)
+        specifier: ^0.0.6
+        version: 0.0.6(@libsql/client@0.14.0)(@types/node@20.17.3)(ioredis@5.4.1)(tailwindcss@3.4.14)(terser@5.36.0)(typescript@5.5.4)(vite@5.4.0(@types/node@20.17.3)(terser@5.36.0))(webpack-sources@3.2.3)
       fastify:
         specifier: ^5.0.0
         version: 5.0.0
@@ -3145,8 +3145,8 @@ packages:
   end-of-stream@1.4.4:
     resolution: {integrity: sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==}
 
-  enochian-js@0.0.5:
-    resolution: {integrity: sha512-6FV9XIJkZ0qaEIA3OWHQfQiqZ2kkVByebnL+vkT1TLCBn5z6CB44TUiyki6tQ2jUkC0yr2zhfpFfU2AD245YhQ==}
+  enochian-js@0.0.6:
+    resolution: {integrity: sha512-5Gd27NyUOqZURIYQpeUcamxelgLbYUrCUhIYCJU5ZjihhAU6dTgvacX6sn61SvtWf/SQ0dQRbP4cgk+cbXpFvA==}
 
   entities@4.5.0:
     resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
@@ -4312,8 +4312,8 @@ packages:
   napi-build-utils@1.0.2:
     resolution: {integrity: sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==}
 
-  nitropack@2.10.3:
-    resolution: {integrity: sha512-7n+ITF7RbCMwZZzyacxJ9eMCnWuE60omGJEyLM5PQRKS4Vu5w6OOCvf4C6E3UC0UryFuUIwGbJ3M+tIP9Az9OQ==}
+  nitropack@2.10.4:
+    resolution: {integrity: sha512-sJiG/MIQlZCVSw2cQrFG1H6mLeSqHlYfFerRjLKz69vUfdu0EL2l0WdOxlQbzJr3mMv/l4cOlCCLzVRzjzzF/g==}
     engines: {node: ^16.11.0 || >=17.0.0}
     hasBin: true
     peerDependencies:
@@ -4466,8 +4466,8 @@ packages:
       zod:
         optional: true
 
-  openapi-typescript@7.4.2:
-    resolution: {integrity: sha512-SvhmSTItcEAdDUcz+wzrcg6OENpMRkHqqY2hZB01FT+NOfgLcZ1B1ML6vcQrnipONHtG9AQELiKHgGTjpNGjiQ==}
+  openapi-typescript@7.4.3:
+    resolution: {integrity: sha512-xTIjMIIOv9kNhsr8JxaC00ucbIY/6ZwuJPJBZMSh5FA2dicZN5uM805DWVJojXdom8YI4AQTavPDPHMx/3g0vQ==}
     hasBin: true
     peerDependencies:
       typescript: ^5.x
@@ -5176,8 +5176,8 @@ packages:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
 
-  std-env@3.7.0:
-    resolution: {integrity: sha512-JPbdCEQLj1w5GilpiHAx3qJvFndqybBysA3qUOnznweH4QbNYUsW/ea8QzSrnh0vNsezMMw5bcVool8lM0gwzg==}
+  std-env@3.8.0:
+    resolution: {integrity: sha512-Bc3YwwCB+OzldMxOXJIIvC6cPRWr/LxOp48CdQTOkPyk/t4JWWJbrilwBd7RJzKV8QW7tJkcgAmeuLLJugl5/w==}
 
   stream-browserify@3.0.0:
     resolution: {integrity: sha512-H73RAHsVBapbim0tU2JwwOiXUj+fikfiaoYAKHF3VJfA0pe2BCzkhAHBlLG6REzE+2WNZcxOXjK7lkso+9euLA==}
@@ -5461,9 +5461,6 @@ packages:
 
   undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
-
-  undici-types@5.28.4:
-    resolution: {integrity: sha512-3OeMF5Lyowe8VW0skf5qaIE7Or3yS9LS7fvMUI0gg4YxpIBVg0L8BxCmROw2CcYhSkpR68Epz7CGc8MPj94Uww==}
 
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
@@ -7726,7 +7723,7 @@ snapshots:
       mlly: 1.7.2
       node-forge: 1.3.1
       pathe: 1.1.2
-      std-env: 3.7.0
+      std-env: 3.8.0
       ufo: 1.5.4
       untun: 0.1.3
       uqr: 0.1.2
@@ -8618,7 +8615,7 @@ snapshots:
   dax-sh@0.39.2:
     dependencies:
       '@deno/shim-deno': 0.19.2
-      undici-types: 5.28.4
+      undici-types: 5.26.5
 
   db0@0.2.1(@libsql/client@0.14.0)(better-sqlite3@11.5.0):
     optionalDependencies:
@@ -8858,7 +8855,7 @@ snapshots:
     dependencies:
       once: 1.4.0
 
-  enochian-js@0.0.5(@libsql/client@0.14.0)(@types/node@20.17.3)(ioredis@5.4.1)(tailwindcss@3.4.14)(terser@5.36.0)(typescript@5.5.4)(vite@5.4.0(@types/node@20.17.3)(terser@5.36.0))(webpack-sources@3.2.3):
+  enochian-js@0.0.6(@libsql/client@0.14.0)(@types/node@20.17.3)(ioredis@5.4.1)(tailwindcss@3.4.14)(terser@5.36.0)(typescript@5.5.4)(vite@5.4.0(@types/node@20.17.3)(terser@5.36.0))(webpack-sources@3.2.3):
     dependencies:
       '@zolinthecow/enochian-studio': 0.0.2(@libsql/client@0.14.0)(@types/node@20.17.3)(ioredis@5.4.1)(tailwindcss@3.4.14)(terser@5.36.0)(typescript@5.5.4)(vite@5.4.0(@types/node@20.17.3)(terser@5.36.0))(webpack-sources@3.2.3)
       openai: 4.71.1(zod@3.23.8)
@@ -9414,7 +9411,7 @@ snapshots:
   h3@1.13.0:
     dependencies:
       cookie-es: 1.2.2
-      crossws: 0.3.1
+      crossws: 0.2.4
       defu: 6.1.4
       destr: 2.0.3
       iron-webcrypto: 1.2.1
@@ -9423,6 +9420,8 @@ snapshots:
       ufo: 1.5.4
       uncrypto: 0.1.3
       unenv: 1.10.0
+    transitivePeerDependencies:
+      - uWebSockets.js
 
   has-flag@3.0.0: {}
 
@@ -9830,7 +9829,7 @@ snapshots:
       citty: 0.1.6
       clipboardy: 4.0.0
       consola: 3.2.3
-      crossws: 0.3.1
+      crossws: 0.2.4
       defu: 6.1.4
       get-port-please: 3.1.2
       h3: 1.13.0
@@ -9839,10 +9838,12 @@ snapshots:
       mlly: 1.7.2
       node-forge: 1.3.1
       pathe: 1.1.2
-      std-env: 3.7.0
+      std-env: 3.8.0
       ufo: 1.5.4
       untun: 0.1.3
       uqr: 0.1.2
+    transitivePeerDependencies:
+      - uWebSockets.js
 
   listr2@8.2.4:
     dependencies:
@@ -10405,7 +10406,7 @@ snapshots:
 
   napi-build-utils@1.0.2: {}
 
-  nitropack@2.10.3(@libsql/client@0.14.0)(better-sqlite3@11.5.0)(typescript@5.5.4)(webpack-sources@3.2.3):
+  nitropack@2.10.4(@libsql/client@0.14.0)(better-sqlite3@11.5.0)(typescript@5.5.4)(webpack-sources@3.2.3):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.4
       '@netlify/functions': 2.8.2
@@ -10454,7 +10455,7 @@ snapshots:
       node-fetch-native: 1.6.4
       ofetch: 1.4.1
       ohash: 1.1.4
-      openapi-typescript: 7.4.2(typescript@5.5.4)
+      openapi-typescript: 7.4.3(typescript@5.5.4)
       pathe: 1.1.2
       perfect-debounce: 1.0.0
       pkg-types: 1.2.1
@@ -10466,7 +10467,7 @@ snapshots:
       semver: 7.6.3
       serve-placeholder: 2.0.2
       serve-static: 1.16.2
-      std-env: 3.7.0
+      std-env: 3.8.0
       ufo: 1.5.4
       uncrypto: 0.1.3
       unctx: 2.3.1(webpack-sources@3.2.3)
@@ -10496,6 +10497,7 @@ snapshots:
       - mysql2
       - supports-color
       - typescript
+      - uWebSockets.js
       - webpack-sources
 
   node-abi@3.71.0:
@@ -10657,7 +10659,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  openapi-typescript@7.4.2(typescript@5.5.4):
+  openapi-typescript@7.4.3(typescript@5.5.4):
     dependencies:
       '@redocly/openapi-core': 1.25.11(supports-color@9.4.0)
       ansi-colors: 4.1.3
@@ -11447,7 +11449,7 @@ snapshots:
 
   statuses@2.0.1: {}
 
-  std-env@3.7.0: {}
+  std-env@3.8.0: {}
 
   stream-browserify@3.0.0:
     dependencies:
@@ -11775,8 +11777,6 @@ snapshots:
 
   undici-types@5.26.5: {}
 
-  undici-types@5.28.4: {}
-
   undici-types@6.19.8: {}
 
   unenv@1.10.0:
@@ -11866,6 +11866,8 @@ snapshots:
       ufo: 1.5.4
     optionalDependencies:
       ioredis: 5.4.1
+    transitivePeerDependencies:
+      - uWebSockets.js
 
   untun@0.1.3:
     dependencies:
@@ -11991,7 +11993,7 @@ snapshots:
       hookable: 5.5.3
       http-proxy: 1.18.1
       micromatch: 4.0.7
-      nitropack: 2.10.3(@libsql/client@0.14.0)(better-sqlite3@11.5.0)(typescript@5.5.4)(webpack-sources@3.2.3)
+      nitropack: 2.10.4(@libsql/client@0.14.0)(better-sqlite3@11.5.0)(typescript@5.5.4)(webpack-sources@3.2.3)
       node-fetch-native: 1.6.4
       path-to-regexp: 6.3.0
       pathe: 1.1.2
